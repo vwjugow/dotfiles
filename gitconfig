@@ -1,0 +1,47 @@
+[user]
+	name = Victor Wjugow
+	email = victorwjugow@gmail.com
+[core]
+	editor = vim
+[help]
+	autocorrect = 20
+[color]
+	ui = auto
+	diff = always
+	status = always
+[alias]
+	co = checkout
+	coh = checkout
+	ci = commit -m
+	st = status -s
+	br = rev-parse --abbrev-ref HEAD
+	pu = !git push origin `git br`
+	puf = !git push origin `git br` --force
+	prune = !$HOME/.scripts/gitprune
+	aliases = config --get-regexp ^alias\\.
+	brd = branch -D
+	cob = checkout -b
+	p = !$HOME/.scripts/gitpull
+	pf = "!f() { branch=`git br`; git fetch origin $branch; git reset origin/$branch --hard; }; f"
+	r = "!f() { git rebase -i HEAD~$1; }; f"
+	acib = "!f() { git add . && git cib \"$*\"; }; f"
+	f = !git fetch origin $1:$1
+	fr = "!f() { git fetch origin $1:$1 && git rebase $1; }; f"
+	coh = checkout
+	coh = checkout
+	coh = checkout
+	unstage = reset HEAD --
+	undoCommits = "!f() { git reset HEAD~$1; }; f"
+	cp = cherry-pick
+	undelete = checkout --
+	ri = rebase -i --autosquash
+	cif = 
+	ls = "!f() { if [ -z $1 ]; then LINES=20; else LINES=$1; fi; git log --oneline --decorate -n $LINES | awk -f ~/.scripts/print_line_number.awk; }; f"
+	pup = "!f() { git push origin `git br`; ~/.scripts/create_pr.sh `git br` $1; }; f"
+	coh = checkout
+	files = show --pretty=\"\" --name-only
+	orphank = !gitk --all --date-order `git reflog | cut -c1-8` &
+	brs = for-each-ref --sort=-committerdate refs/heads/ --format=\"%(authordate:short) %(color:red)%(objectname:short) %(color:yellow)%(refname:short)%(color:reset) (%(color:green)%(committerdate:relative)%(color:reset))\"
+	cib = "!f() { git commit -m \"`git br | sed s:_\\\\\\S\\\\\\+::` $1\" $2; }; f"
+	cix = "!f() { git commit --fixup=HEAD~$1 $2; }; f"
+[http]
