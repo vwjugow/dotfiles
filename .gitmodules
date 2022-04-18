@@ -2,3 +2,11 @@
 	path = dotbot
 	url = https://github.com/anishathalye/dotbot
 	ignore = dirty
+[submodule "fzf"]
+	path = fzf
+	url = https://github.com/junegunn/fzf.git
+	ignore = dirty
+[submodule "powerlevel10k"]
+	path = powerlevel10k
+	url = https://github.com/romkatv/powerlevel10k.git
+	ignore = dirty
