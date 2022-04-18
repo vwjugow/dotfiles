@@ -6,6 +6,6 @@
         path: ssh/config
         create: true
     ~/.vimrc: vimrc
+    ~/.vim: vim
+    ~/.git-prompt.sh: git-prompt.sh
     ~/.zshrc: zshrc
-
-

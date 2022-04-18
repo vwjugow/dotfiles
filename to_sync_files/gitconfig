@@ -28,8 +28,6 @@
 	f = !git fetch origin $1:$1
 	fr = "!f() { git fetch origin $1:$1 && git rebase $1; }; f"
 	coh = checkout
-	coh = checkout
-	coh = checkout
 	unstage = reset HEAD --
 	undoCommits = "!f() { git reset HEAD~$1; }; f"
 	cp = cherry-pick
