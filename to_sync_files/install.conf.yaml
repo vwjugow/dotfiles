@@ -1,14 +1,23 @@
+- defaults:
+    link:
+        relink: true
+        create: true
+
 - clean: ['~']
 
 - link:
     ~/.fzf.zsh: fzf.zsh
-    ~/.gitconfig: gitconfig
-    ~/.oh-my-zsh/custom/themes/powerlevel10k: oh-my-zsh/custom/themes/powerlevel10k
-    ~/.ssh/config:
-        path: ssh/config
-        create: true
+    ~/.fzf: ../fzf
+    ~/.git-prompt.sh: git-prompt.sh
+    ~/.gitconfig:
+        path: gitconfig
+        force: true
+    ~/.oh-my-zsh/custom/themes/powerlevel10k: ../powerlevel10k
     ~/.p10k.zsh: p10k.zsh
     ~/.vimrc: vimrc
-    ~/.vim: vim
-    ~/.git-prompt.sh: git-prompt.sh
-    ~/.zshrc: zshrc
+    ~/.vim:
+        path: vim
+        force: true
+    ~/.zshrc:
+        path: zshrc
+        force: true
