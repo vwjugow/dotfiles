@@ -21,3 +21,4 @@
     ~/.zshrc:
         path: zshrc
         force: true
+    ~/.scripts: scripts

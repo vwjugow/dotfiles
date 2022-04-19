@@ -1,0 +1,19 @@
+#!/bin/bash  
+gitst=`git status --ignore-submodules`
+branch=`git br`
+echo $should_stash
+if [[ $gitst = *"Changes not staged for commit"* && $gitst != *"(new commits)"* ]]; then
+#if [[ $gitst != *"working directory clean"* ]]; then
+	echo "stashing local changes";
+	git stash
+fi
+
+git pull origin `git br`;
+#git fetch origin $branch && git reset origin/$branch --hard
+
+if [[ $gitst = *"Changes not staged for commit"* && $gitst != *"(new commits)"* ]]; then
+#if [[ $gitst != *"working directory clean"* ]]; then
+	echo "stashing local changes";
+	git stash pop
+fi
+
