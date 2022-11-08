@@ -126,3 +126,5 @@ export PATH="$ASDF_PY_ROOT/bin:$PATH"
 # source $(pyenv root)/completions/pyenv.bash
 # eval "$(pyenv virtualenv-init -)"
 . $HOME/.asdf/asdf.sh
+
+export NVM_DIR="$HOME/.nvm"
