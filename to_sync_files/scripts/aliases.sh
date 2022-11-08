@@ -412,5 +412,13 @@ function load_nvm() {
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
     [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 }
+    # Ruby
+function load_rbenv() {
+    eval "$(rbenv init - zsh)"
+    export PATH="/opt/homebrew/opt/imagemagick@6/bin:$PATH"
+    export LDFLAGS="-L/opt/homebrew/opt/libffi/lib"
+    export CPPFLAGS="-I/opt/homebrew/opt/libffi/include"
+    export PKG_CONFIG_PATH="/opt/homebrew/opt/libffi/lib/pkgconfig"
+}
 alias lines_to_list="sed -e 's/\\n/ /g'"
 # END OTHERS
