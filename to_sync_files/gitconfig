@@ -3,6 +3,7 @@
 	email = victorwjugow@gmail.com
 [core]
 	editor = vim
+	excludesfile = ~/.gitignore_global
 [help]
 	autocorrect = 20
 [color]
@@ -40,6 +41,10 @@
 	files = show --pretty=\"\" --name-only
 	orphank = !gitk --all --date-order `git reflog | cut -c1-8` &
 	brs = for-each-ref --sort=-committerdate refs/heads/ --format=\"%(authordate:short) %(color:red)%(objectname:short) %(color:yellow)%(refname:short)%(color:reset) (%(color:green)%(committerdate:relative)%(color:reset))\"
-	cib = "!f() { git commit -m \"`git br | sed s:_\\\\\\S\\\\\\+::` $1\" $2; }; f"
+	cib = "!f() { git commit -m \"`git br | perl -p -e 's:_\\S+::'` $1\" $2; }; f"
 	cix = "!f() { git commit --fixup=HEAD~$1 $2; }; f"
 [http]
+[init]
+	defaultBranch = master
+[gpg]
+	format = ssh
