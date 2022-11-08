@@ -47,13 +47,13 @@ alias g="git"
 alias gg="git gui &"
 alias gk="gitk &"
 alias gcib="git br | xargs -I branch  git ci -m branch"
-alias gdbm="git co development; git branch | sed 's/^\*\s*//' | grep -v 'master\|develop' | xargs git branch -d"
-alias gdbl="git co develop; git branch --merged | decolorify | sed 's/^\(\s\|\*\)*//' | grep -v 'master\|develop' | xargs -I vranch git branch -d vranch"
 alias gdbi="(git f master || git p) && git co master && git branch --merged | decolorify | sed 's/^\(\s\|\*\)*//' | grep -v 'master' | xargs -I vranch git branch -d vranch"
+alias gdbd="(git f development || git p) && git co development && git branch --merged | decolorify | sed 's/^\(\s\|\*\)*//' | grep -v 'master\|development' | xargs -I vranch git branch -d vranch"
 alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
 alias configk="cd $HOME/.cfg && (gitk &) && cd - > /dev/null"
 alias gbc="git br | xc"
 alias gmr="~/.scripts/git_multiple_rebase.sh"
+alias lsg="git ls-tree --name-only HEAD"
 function gadd() {
 	pattern=$1
 	git st | egrep -v -e '->' | egrep $pattern | awk '{print $2}' | xargs git add
@@ -112,6 +112,11 @@ function fwClean() { mvn flyway:repair -Dflyway.configFile=$1; }
 #alias postgresRhc="psql -h localhost -p $PORT $DB $USER"
 alias bcmysql="mysql -u docker -P 3307 -h localhost --protocol=tcp -p"
 # END SQL
+## Kubectl
+alias kc=kubectl
+alias kca="kubectl apply -f"
+alias kce="kubectl get events --sort-by=.metadata.creationTimestamp"
+## END Kubectl
 # DOCKER
 function uiDockerExec() {
 	docker ps | grep docker_ui | awk '{print $1}' | xargs -I id docker exec -i id $*
@@ -134,6 +139,7 @@ function drmi() { # drmi bankers
     docker image prune
     docker images | grep ${query}  | cut -d " " -f 1 | xargs docker rmi
 }
+alias dprune="docker system prune -a -f --volumes"
 # END DOCKER
 # RHC
 function rhcsshkeyadd() { rhc sshkey-add $1 $HOME/.ssh/id_rsa.pub; }
@@ -145,12 +151,62 @@ alias rhcprod="rhc server use prod"
 alias rhcit="rhc server use it"
 alias rhcvic="rhc setup -l $RHC_USER -p $RHC_PW --server openshift.redhat.com"
 # END RHC
+### AWS
+alias tf=terraform
+function aws_get_tasks_arn {
+    local AWS_CLUSTER=$1
+    local SERVICE_NAME=$2  # ticket-service-sandbox-srv
+    aws ecs list-tasks --cluster $AWS_CLUSTER  --service-name $SERVICE_NAME \
+        | grep arn | cut -d "/" -f 3 | perl -p -e 's/"//g'
+}
+function tf_m1_init {
+    PLAN_ARGS=$@
+    terraform init | grep -E "Could not retrieve the list of available versions\|Error while installing" | grep -E "version\|hashicorp"
+    perl -0777 -i -pe 's;provider ".+hashicorp/aws.+\s*version\s*=\s*".+"\s*hashes\s*=\s*\[(\s*".+",\s*)+]\s*};;' .terraform.lock.hcl
+    perl -0777 -i -pe 's;provider ".+hashicorp/template.+\s*version\s*=\s*".+"\s*hashes\s*=\s*\[(\s*".+",\s*)+]\s*};;' .terraform.lock.hcl
+    m1-terraform-provider-helper install hashicorp/aws -v v4.13.0
+    m1-terraform-provider-helper install hashicorp/template -v v2.2.0
+    terraform init
+    perl -0777 -i -pe 's;provider ".+hashicorp/aws.+\s*version\s*=\s*".+"\s*hashes\s*=\s*\[(\s*".+",\s*)+]\s*};;' .terraform.lock.hcl
+    perl -0777 -i -pe 's;provider ".+hashicorp/template.+\s*version\s*=\s*".+"\s*hashes\s*=\s*\[(\s*".+",\s*)+]\s*};;' .terraform.lock.hcl
+    terraform plan $PLAN_ARGS
+}
+function ecsssh {
+    AWS_CLUSTER=skydropx-staging-cl
+    AWS_CONTAINER=$1
+    AWS_TASK=$2
+    aws ecs execute-command --cluster $AWS_CLUSTER --task $AWS_TASK --container $AWS_CONTAINER --interactive --command "/bin/sh"
+}
+function ecsd {
+    AWS_CLUSTER=$1
+    AWS_SERVICE=$2
+    aws ecs update-service --region us-east-1 --cluster ${AWS_CLUSTER} \
+        --service ${AWS_SERVICE} --force-new-deployment
+}
+### END AWS
 # LINUX DIAGNOSTICS
 alias procesos="ps -ef | grep -v grep | egrep"
 alias lsmount="mount | grep \"/media/$USER/\"" #| cut -d\" \" -f1"
 alias lsfs="df -Th"
 alias lsmem="free -h"
+alias lsusers="getent passwd | cut -d ':' -f 1"
+alias lsgroups="cat /etc/group | cut -d ' ' -f 1"
 # END CHEATS
+# Laburos
+## Skydropx
+function sxgetenv {
+    # sxgetenv ticket-service production prod.env
+    aws s3 cp s3://skydropx-devops/env_files/$1/environments/$2/.env $3
+}
+function sxputenv {
+    # sxputenv prod.env ticket-service production
+    aws s3 cp $1 s3://skydropx-devops/env_files/$2/environments/$3/.env
+}
+alias segcp="sem edit secret GCP"
+alias seaws="sem edit secret AWS"
+alias se="sem edit secret"
+
+### END Laburos
 # BriteCore
 alias recreate_executor="cd /Users/vwjugow/Documents/code/iws/executor && docker-compose stop && git stash save \"stashed by script\" && docker-compose --build"
 alias recreate_executor_for_testing="cd /Users/vwjugow/Documents/code/iws/executor; echo 'unstash the correct changes and run mvn clean package -DskipTests'"
@@ -308,7 +364,7 @@ alias remminaClean="rm ~/.freerdp/known_hosts"
 function ftext() { grep -RnIH '.' -e $2 --include=\*${1} --exclude-dir=$3; }
 function ftexti() { grep -RnIHi '.' -e $2 --include=$1 --exclude-dir=$3; }
 alias fname="find . | grep $1"
-alias unzip="gzip -d"
+# alias unzip="gzip -d"
 alias firefox="MOZ_ACCELERATED=1 MOZ_GLX_IGNORE_BLACKLIST=1 firefox"
 alias showAlias="cat ~/.scripts/aliases.sh | grep -C2 -e"
 alias p="play"
