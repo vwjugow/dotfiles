@@ -107,6 +107,9 @@ source $ZSH/oh-my-zsh.sh
 
 . ~/.scripts/aliases.sh
 
+# Jump
+eval "$(jump shell)"
+
 # PYENV
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
