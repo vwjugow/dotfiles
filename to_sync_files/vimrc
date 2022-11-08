@@ -1,12 +1,12 @@
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-" Maintainer: 
+" Maintainer:
 "       Amir Salihefendic
 "       http://amix.dk - amix@amix.dk
 "
-" Version: 
+" Version:
 "       5.0 - 29/05/12 15:43:36
 "
-" Blog_post: 
+" Blog_post:
 "       http://amix.dk/blog/post/19691#The-ultimate-Vim-configuration-on-Github
 "
 " Awesome_version:
@@ -19,7 +19,7 @@
 " Syntax_highlighted:
 "       http://amix.dk/vim/vimrc.html
 "
-" Raw_version: 
+" Raw_version:
 "       http://amix.dk/vim/vimrc.txt
 "
 " Sections:
@@ -36,6 +36,8 @@
 "    -> Spell checking
 "    -> Misc
 "    -> Helper functions
+"    -> Styling
+"    -> Plugins config
 "
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
@@ -66,7 +68,7 @@ let g:mapleader = ","
 " Fast saving
 nmap <leader>w :w!<cr>
 
-" :W sudo saves the file 
+" :W sudo saves the file
 " (useful for handling the permission-denied error)
 " command W w !sudo tee % > /dev/null
 
@@ -84,7 +86,7 @@ let @p = '"+y}'
 set so=14
 
 " Avoid garbled characters in Chinese language windows OS
-let $LANG='en' 
+let $LANG='en'
 set langmenu=en
 source $VIMRUNTIME/delmenu.vim
 source $VIMRUNTIME/menu.vim
@@ -116,23 +118,23 @@ set whichwrap+=<,>,h,l
 " Ignore case when searching
 set ignorecase
 
-" When searching try to be smart about cases 
+" When searching try to be smart about cases
 set smartcase
 
 " Highlight search results
 set hlsearch
 
 " Makes search act like search in modern browsers
-set incsearch 
+set incsearch
 
 " Don't redraw while executing macros (good performance config)
-set lazyredraw 
+set lazyredraw
 
 " For regular expressions turn magic on
 set magic
 
 " Show matching brackets when text indicator is over them
-set showmatch 
+set showmatch
 " How many tenths of a second to blink when matching brackets
 set mat=2
 
@@ -156,7 +158,7 @@ set foldcolumn=1
 " => Colors and Fonts
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Enable syntax highlighting
-syntax enable 
+syntax enable
 
 " Enable 256 colors palette in Gnome Terminal
 if $COLORTERM == 'gnome-terminal'
@@ -169,6 +171,8 @@ catch
 endtry
 
 set background=dark
+hi! Normal ctermbg=NONE guibg=NONE
+hi! NonText ctermbg=NONE guibg=NONE
 
 " Set extra options when running in GUI mode
 if has("gui_running")
@@ -253,8 +257,8 @@ map <leader>h :bprevious<cr>
 map <leader>tn :tabnew<cr>
 map <leader>to :tabonly<cr>
 map <leader>tc :tabclose<cr>
-map <leader>tm :tabmove 
-map <leader>t<leader> :tabnext 
+map <leader>tm :tabmove
+map <leader>t<leader> :tabnext
 
 " Useful mappings for managing splits
 map <leader>sv :vsplit<cr>
@@ -277,7 +281,7 @@ map <leader>te :tabedit <c-r>=expand("%:p:h")<cr>/
 " Switch CWD to the directory of the open buffer
 map <leader>cd :cd %:p:h<cr>:pwd<cr>
 
-" Specify the behavior when switching between buffers 
+" Specify the behavior when switching between buffers
 try
   set switchbuf=useopen,usetab,newtab
   set stal=2
@@ -341,7 +345,10 @@ autocmd BufWrite *.yaml :call DeleteTrailingWS()
 vnoremap <silent> gv :call VisualSelection('gv', '')<CR>
 
 " Open Ag and put the cursor in the right position
-map <leader>g :Ag 
+if executable('ag')
+  let g:ackprg = 'ag --vimgrep'
+endif
+map <leader>g :Ack!
 
 " When you press <leader>r you can search and replace the selected text
 vnoremap <silent> <leader>r :call VisualSelection('replace', '')<CR>
@@ -522,7 +529,7 @@ endif
 
 " git
 "git blame (Press Enter to go into a commit)
-noremap <leader>gb :Gblame<CR>
+noremap <leader>gb :Git blame<CR>
 "go back to HEAD from a revision
 noremap <leader>ge :Gedit<CR>
 "resolve conflicts
@@ -539,7 +546,7 @@ Plug 'tpope/vim-unimpaired' "git wrapper extras
 " Plug 'junegunn/fzf', { 'do': { () -> fzf#install() } }
 Plug '~/.fzf'
 Plug 'junegunn/fzf.vim' "fuzzy file search
-Plug 'rking/ag.vim' "Ag, find text
+Plug 'mileszs/ack.vim' "Ag, find text
 Plug 'terryma/vim-multiple-cursors'
 Plug 'tpope/vim-surround' "change characters surrounding a word/phrase
 Plug 'tpope/vim-repeat' "repear for surround
