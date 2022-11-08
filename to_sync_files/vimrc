@@ -525,6 +525,22 @@ nnoremap <C-t> : call Toggle_transparent()<CR>
 " This makes vim transparent in terminal by default
 hi Normal ctermbg=NONE
 
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Plugins config
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+let g:ale_fixers = {
+\    '*': ['remove_trailing_lines', 'trim_whitespace'],
+\    'javascript': ['eslint'],
+\    'sh': ['shfmt'],
+\    'py': ['autoimport', 'isort', 'autoflake', 'black'],
+\    'java': [],
+\    'yml': [],
+\    'json': []
+\}
+let g:ale_linters = {
+\   'python': ['flake8']
+\}
+let g:ale_fix_on_save = 1
 set re=2  " fix syntax highlighting on ts files
 
 " Replace the default dictionary completion with fzf-based fuzzy completion
@@ -577,5 +593,7 @@ Plug 'tpope/vim-surround' "change characters surrounding a word/phrase
 Plug 'tpope/vim-repeat' "repear for surround
 Plug 'chiel92/vim-autoformat' "pip3 install jsbeautifier / sudo npm install -g js-beautify
 Plug 'severin-lemaignan/vim-minimap' "sublime like minimap!
+Plug 'dense-analysis/ale'
 Plug 'itchyny/lightline.vim' "status bar
+Plug 'maximbaz/lightline-ale'
 call plug#end()
