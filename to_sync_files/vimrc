@@ -495,12 +495,13 @@ imap <c-x><c-l> <plug>(fzf-complete-line)
 " Advanced customization using autoload functions
 inoremap <expr> <c-x><c-k> fzf#vim#complete#word({'left': '15%'})
 
-let g:syntastic_always_populate_loc_list = 1
-let g:syntastic_auto_loc_list = 1
-let g:syntastic_check_on_open = 1
-let g:syntastic_check_on_wq = 0
-let g:loaded_syntastic_java_javac_checker = 1
-let g:syntastic_python_checkers=['flake8']
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" => Styling
+"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+" This makes vim transparent in terminal by default
+hi Normal ctermbg=NONE
+
+set re=2  " fix syntax highlighting on ts files
 
 " Replace the default dictionary completion with fzf-based fuzzy completion
 inoremap <expr> <c-x><c-k> fzf#vim#complete('cat /usr/share/dict/words')
@@ -551,7 +552,6 @@ Plug 'terryma/vim-multiple-cursors'
 Plug 'tpope/vim-surround' "change characters surrounding a word/phrase
 Plug 'tpope/vim-repeat' "repear for surround
 Plug 'chiel92/vim-autoformat' "pip3 install jsbeautifier / sudo npm install -g js-beautify
-Plug 'vim-syntastic/syntastic' "syntax errors
 Plug 'severin-lemaignan/vim-minimap' "sublime like minimap!
 Plug 'itchyny/lightline.vim' "status bar
 call plug#end()
