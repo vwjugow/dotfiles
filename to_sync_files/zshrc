@@ -115,3 +115,11 @@ if command -v pyenv 1>/dev/null 2>&1; then
 fi
 source $(pyenv root)/completions/pyenv.bash
 eval "$(pyenv virtualenv-init -)"
+export ASDF_PY_ROOT="$HOME/.asdf/installs/python/3.10.4"
+export PATH="$ASDF_PY_ROOT/bin:$PATH"
+# if command -v pyenv 1>/dev/null 2>&1; then
+#     eval "$(pyenv init -)"
+# fi
+# source $(pyenv root)/completions/pyenv.bash
+# eval "$(pyenv virtualenv-init -)"
+. $HOME/.asdf/asdf.sh
