@@ -3,12 +3,15 @@
 set -e
 
 CONFIG="to_sync_files/install.conf.yaml"
+SUBMODULE_DIRS=("dotbot" "asdf" "fzf" "powerlevel10k")
 DOTBOT_DIR="dotbot"
 DOTBOT_BIN="bin/dotbot"
+
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 cd "${BASEDIR}"
-git -C "${DOTBOT_DIR}" submodule sync --quiet --recursive
-git submodule update --init --recursive "${DOTBOT_DIR}"
-
+for DIR in ${SUBMODULE_DIRS[@]}; do
+    git -C "${DIR}" submodule sync --quiet --recursive || echo "Could not sync ${DIR} submodule"
+    git submodule update --init --recursive "${DIR}" || echo "Could not update ${DIR} submodule"
+done
+git pull --recurse-submodules && git submodule update
 "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -c "${CONFIG}" "${@}"
