@@ -15,3 +15,18 @@ for DIR in ${SUBMODULE_DIRS[@]}; do
 done
 git pull --recurse-submodules && git submodule update
 "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -c "${CONFIG}" "${@}"
+
+unameOut="$(uname -a)"
+if [[ "$unameOut" =~ "MANJARO" ]]; then
+    DISTRO="MANJARO"
+elif [[ "$unameOut" =~ "Ubuntu" ]]; then
+    DISTRO="UBUNTU"
+elif [[ "$unameOut" =~ "Mac" ]]; then
+    DISTRO="MAC"
+else
+    echo "Unsuported Linux distribution" && exit 1
+fi
+
+./scripts/install_dependency_manager.sh $DISTRO
+./scripts/${DISTRO}/install_packages.sh
+./scripts/install_shell.sh
