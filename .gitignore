@@ -1,2 +1,5 @@
 # VIM
 *.sw?
+
+# Logs
+log.out
