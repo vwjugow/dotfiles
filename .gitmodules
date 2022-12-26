@@ -13,3 +13,6 @@
 [submodule "asdf"]
 	path = asdf
 	url = https://github.com/asdf-vm/asdf.git
+[submodule "xkblayout-state"]
+	path = xkblayout-state
+	url = git@github.com:nonpop/xkblayout-state.git
