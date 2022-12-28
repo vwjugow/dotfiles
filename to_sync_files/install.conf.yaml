@@ -23,3 +23,4 @@
         path: zshrc
         force: true
     ~/.scripts: scripts
+    # /etc/X11/xorg.conf.d/70-synaptics.conf: 70-synaptics.conf

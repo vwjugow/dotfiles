@@ -39,6 +39,7 @@ PACKAGES=(
     unrar
     unzip
     whatsapp-nativefier
+    xf86-input-synaptics
     youtube-dl
     zip
     zoom
