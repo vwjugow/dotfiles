@@ -29,4 +29,5 @@ fi
 
 ./scripts/install_dependency_manager.sh $DISTRO
 ./scripts/${DISTRO}/install_packages.sh
+./scripts/${DISTRO}/tweak_configs.sh
 ./scripts/install_shell.sh
