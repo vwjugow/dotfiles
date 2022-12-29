@@ -53,12 +53,12 @@ bindsym $mod+Ctrl+m exec pavucontrol
 # Screen brightness controls
 # bindsym XF86MonBrightnessUp exec "xbacklight -inc 10; notify-send 'brightness up'"
 # bindsym XF86MonBrightnessDown exec "xbacklight -dec 10; notify-send 'brightness down'"
-# bindsym XF86Search exec "playerctl play"
 # bindsym XF86AudioPlay exec "playerctl play"
+bindsym XF86Tools exec "playerctl previous"
 # bindsym XF86AudioPause exec "playerctl pause"
-# bindsym XF86WakeUp exec "playerctl pause"
+bindsym XF86Search exec "playerctl play-pause"
 # bindsym XF86AudioNext exec "playerctl next"
-# bindsym XF86LaunchA exec "playerctl next"
+bindsym XF86LaunchA exec "playerctl next"
 # bindsym XF86AudioPrev exec "playerctl previous"
 # bindsym XF86Explorer exec "playerctl previous"
 

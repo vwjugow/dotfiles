@@ -17,6 +17,7 @@ PACKAGES=(
     bluez-utils
     blueman
     brave-bin
+    community/playerctl
     gvim
     libreoffice-fresh
     masterpdfeditor-free
