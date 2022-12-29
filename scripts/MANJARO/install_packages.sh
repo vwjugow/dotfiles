@@ -13,6 +13,7 @@ PACKAGES=(
     alttab-git
     arandr
     asdf-vm
+    aur/dropbox
     autoconf
     bluez
     bluez-utils
@@ -20,7 +21,9 @@ PACKAGES=(
     brave-bin
     community/playerctl
     gvim
+    jump
     libreoffice-fresh
+    libx11
     masterpdfeditor-free
     meld
     networkmanager
