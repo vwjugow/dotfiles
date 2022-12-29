@@ -12,6 +12,7 @@ PACKAGES=(
     alsa-utils
     alttab-git
     arandr
+    asdf-vm
     autoconf
     bluez
     bluez-utils
@@ -37,6 +38,7 @@ PACKAGES=(
     spotify
     terminator
     telegram-desktop
+    tk
     unrar
     unzip
     whatsapp-nativefier

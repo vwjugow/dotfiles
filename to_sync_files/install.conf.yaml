@@ -6,7 +6,6 @@
 - clean: ['~']
 
 - link:
-    ~/.asdf: ../asdf
     ~/.fzf.zsh: fzf.zsh
     ~/.fzf: ../fzf
     ~/.git-prompt.sh: git-prompt.sh
