@@ -13,6 +13,10 @@
     ~/.gitconfig:
         path: gitconfig
         force: true
+    ~/.i3:
+      if: '[[ `uname -a` =~ "manjaro" ]]'
+      path: i3
+      force: true
     ~/.oh-my-zsh/custom/themes/powerlevel10k: ../powerlevel10k
     ~/.p10k.zsh: p10k.zsh
     ~/.vimrc: vimrc
