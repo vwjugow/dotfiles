@@ -20,8 +20,8 @@
     ~/.oh-my-zsh/custom/themes/powerlevel10k: ../powerlevel10k
     ~/.p10k.zsh: p10k.zsh
     ~/.vimrc: vimrc
-    ~/.vim:
-        path: vim
+    ~/.vim/autoload/plug.vim:
+        path: vim/plug.vim
         force: true
     ~/.zshrc:
         path: zshrc
