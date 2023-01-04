@@ -61,6 +61,7 @@ bindsym XF86Search exec "playerctl play-pause"
 bindsym XF86LaunchA exec "playerctl next"
 # bindsym XF86AudioPrev exec "playerctl previous"
 # bindsym XF86Explorer exec "playerctl previous"
+bindsym XF86Calculator exec "gnome-calculator"
 
 # Start Applications
 bindsym $mod+Ctrl+b exec terminal -e 'bmenu'
