@@ -20,6 +20,7 @@ PACKAGES=(
     blueman
     brave-bin
     community/playerctl
+    extra/texlive-core
     gvim
     jump
     libreoffice-fresh
@@ -41,6 +42,7 @@ PACKAGES=(
     spotify
     terminator
     telegram-desktop
+    texlive-latexextra
     tk
     unrar
     unzip

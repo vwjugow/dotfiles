@@ -8,7 +8,9 @@ DOTBOT_BIN="bin/dotbot"
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${BASEDIR}"
 git pull --recurse-submodules && git submodule update
+echo "Submodules updated"
 "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -c "${CONFIG}" "${@}"
+echo "Dotbot executed"
 
 unameOut="$(uname -a)"
 if [[ "$unameOut" =~ "MANJARO" ]]; then
