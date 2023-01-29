@@ -20,6 +20,7 @@
     ~/.i3status.conf: i3status.conf
     ~/.oh-my-zsh/custom/themes/powerlevel10k: ../powerlevel10k
     ~/.p10k.zsh: p10k.zsh
+    ~/.profile: profile
     ~/.vimrc: vimrc
     ~/.vim/autoload/plug.vim:
         path: vim/plug.vim
