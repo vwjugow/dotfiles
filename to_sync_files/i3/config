@@ -53,19 +53,19 @@ bindsym $mod+Ctrl+m exec pavucontrol
 # Screen brightness controls
 # bindsym XF86MonBrightnessUp exec "xbacklight -inc 10; notify-send 'brightness up'"
 # bindsym XF86MonBrightnessDown exec "xbacklight -dec 10; notify-send 'brightness down'"
-# bindsym XF86AudioPlay exec "playerctl play"
+bindsym XF86AudioPrev exec "playerctl previous"
 bindsym XF86Tools exec "playerctl previous"
-# bindsym XF86AudioPause exec "playerctl pause"
+bindsym XF86AudioPlay exec "playerctl play-pause"
 bindsym XF86Search exec "playerctl play-pause"
-# bindsym XF86AudioNext exec "playerctl next"
+bindsym XF86AudioNext exec "playerctl next"
 bindsym XF86LaunchA exec "playerctl next"
-# bindsym XF86AudioPrev exec "playerctl previous"
 # bindsym XF86Explorer exec "playerctl previous"
 bindsym XF86Calculator exec "gnome-calculator"
 
 # Start Applications
 bindsym $mod+Ctrl+b exec terminal -e 'bmenu'
 bindsym $mod+F2 exec brave
+bindsym XF86HomePage exec brave
 bindsym $mod+F3 exec pcmanfm
 # bindsym $mod+F3 exec ranger
 bindsym $mod+Shift+F3 exec pcmanfm_pkexec
@@ -127,7 +127,7 @@ bindsym $mod+f fullscreen toggle
 # change container layout (stacked, tabbed, toggle split)
 bindsym $mod+s layout stacking
 bindsym $mod+w layout tabbed
-# bindsym $mod+e layout toggle split
+bindsym $mod+e layout toggle split
 
 # toggle tiling / floating
 bindsym $mod+Shift+space floating toggle
@@ -285,7 +285,7 @@ mode "resize" {
 }
 
 # Lock screen
-bindsym $mod+9 exec --no-startup-id blurlock
+# bindsym $mod+9 exec --no-startup-id blurlock
 
 # Autostart applications
 exec --no-startup-id /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
