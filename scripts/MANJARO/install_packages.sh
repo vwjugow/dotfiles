@@ -79,6 +79,16 @@ function yayUninstall {
   fi
 }
 
+function install_aws {
+    if [[ -z `which aws` ]]; then
+        echo "Installing aws cli"
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip awscliv2.zip
+        sudo ./aws/install
+        rm awscliv2.zip
+    fi
+}
+
 LOG_FILE="log.out"
 echo > $LOG_FILE
 for pkg in ${TO_RM_PACKAGES[@]}; do
@@ -87,3 +97,4 @@ done
 for pkg in ${PACKAGES[@]}; do
     yayInstall $pkg $LOG_FILE
 done
+install_aws
