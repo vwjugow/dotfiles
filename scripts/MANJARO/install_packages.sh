@@ -20,6 +20,7 @@ PACKAGES=(
     blueman
     brave-bin
     community/playerctl
+    community/ack
     extra/texlive-core
     gvim
     jump
