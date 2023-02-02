@@ -28,3 +28,6 @@ asdf install yarn latest
 asdf install nodejs latest
 asdf install java $(asdf list-all java | grep openjdk | tail -n 1)
 asdf install python latest
+
+# Docker
+sudo usermod -a -G docker `whoami`

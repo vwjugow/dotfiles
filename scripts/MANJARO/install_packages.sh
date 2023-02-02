@@ -21,6 +21,8 @@ PACKAGES=(
     brave-bin
     community/playerctl
     community/ack
+    docker
+    docker-compose
     extra/texlive-core
     gvim
     jump
