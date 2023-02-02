@@ -131,8 +131,8 @@ function bcdlc() { # bcdlc bankers
     client=$1
     docker exec -it ${client}_web_1 bash
 }
-alias dcsp="docker-compose stop"
-alias dcst="docker-compose start"
+alias dcsp="docker compose stop"
+alias dcst="docker compose start"
 function drmi() { # drmi bankers
     query=$1
     docker container ls --all | grep ${query} | cut -d " " -f 1 | xargs docker rm -v
