@@ -89,6 +89,14 @@ function install_aws {
     fi
 }
 
+function install_1pw {
+    echo "Installing 1Password"
+    curl -sS https://downloads.1password.com/linux/keys/1password.asc | gpg --import
+    git clone --depth=1 https://aur.archlinux.org/1password.git
+    cd 1password
+    makepkg -si
+}
+
 LOG_FILE="log.out"
 echo > $LOG_FILE
 for pkg in ${TO_RM_PACKAGES[@]}; do
@@ -97,4 +105,5 @@ done
 for pkg in ${PACKAGES[@]}; do
     yayInstall $pkg $LOG_FILE
 done
+install_1pw
 install_aws
