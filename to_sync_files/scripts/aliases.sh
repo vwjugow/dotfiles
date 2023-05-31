@@ -153,6 +153,10 @@ alias rhcvic="rhc setup -l $RHC_USER -p $RHC_PW --server openshift.redhat.com"
 # END RHC
 ### AWS
 alias tf=terraform
+alias tfa="terraform apply"
+alias tfaa="terraform apply -auto-approve"
+alias tfp="terraform plan"
+alias tfpr="terraform plan -refresh-only"
 function aws_get_tasks_arn {
     local AWS_CLUSTER=$1
     local SERVICE_NAME=$2  # ticket-service-sandbox-srv
