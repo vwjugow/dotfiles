@@ -425,4 +425,8 @@ function load_rbenv() {
     export PKG_CONFIG_PATH="/opt/homebrew/opt/libffi/lib/pkgconfig"
 }
 alias lines_to_list="sed -e 's/\\n/ /g'"
+alias fix_external_kb="setxkbmap -layout us,es,ru -variant ,ast,phonetic_YAZHERTY -option 'grp:alt_shift_toggle'"
+alias sleft="xrandr --output VGA-1 --auto --left-of eDP-1"
+alias sright="xrandr --output VGA-1 --auto --right-of eDP-1"
+alias ssame="xrandr --output VGA1 --auto --same-as eDP-1"
 # END OTHERS
