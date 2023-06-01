@@ -24,6 +24,7 @@ PACKAGES=(
     docker
     docker-compose
     extra/texlive-core
+    glibc
     gvim
     jump
     libreoffice-fresh
@@ -37,6 +38,7 @@ PACKAGES=(
     nvidia
     neovim
     openssh
+    postgresql
     ranger
     simplescreenrecorder
     skypeforlinux-stable-bin
@@ -45,7 +47,9 @@ PACKAGES=(
     spotify
     terminator
     telegram-desktop
+    terraform
     texlive-latexextra
+    the_silver_searcher
     tk
     unrar
     unzip
