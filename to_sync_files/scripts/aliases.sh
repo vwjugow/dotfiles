@@ -1,3 +1,5 @@
+COPYFN=pbcopy
+PASTEFN=pbpaste
 # MAVEN
 function mvnrun () {
   echo mvn $@
