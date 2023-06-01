@@ -18,7 +18,7 @@ if [[ "$unameOut" =~ "MANJARO" ]]; then
     DISTRO="MANJARO"
 elif [[ "$unameOut" =~ "Ubuntu" ]]; then
     DISTRO="UBUNTU"
-elif [[ "$unameOut" =~ "Mac" ]]; then
+elif [[ "$unameOut" =~ "Darwin" ]]; then
     DISTRO="MAC"
 else
     echo "Unsuported Linux distribution" && exit 1
