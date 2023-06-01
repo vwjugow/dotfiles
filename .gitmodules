@@ -10,6 +10,3 @@
 	path = powerlevel10k
 	url = https://github.com/romkatv/powerlevel10k.git
 	ignore = dirty
-[submodule "xkblayout-state"]
-	path = xkblayout-state
-	url = git@github.com:nonpop/xkblayout-state.git
