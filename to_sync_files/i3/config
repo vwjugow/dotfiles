@@ -76,11 +76,11 @@ bindsym $mod+Shift+d --release exec "killall dunst; exec notify-send 'restart du
 ## Screenshots
 bindsym Print exec --no-startup-id i3-scrot
 bindsym $mod+Print --release exec --no-startup-id i3-scrot -w
-bindsym $mod+Shift+Print --release exec --no-startup-id i3-scrot -s
+bindsym --release $mod+Shift+Print exec --no-startup-id i3-scrot -s
 ## Clipboard Screenshots
 bindsym Ctrl+Print exec --no-startup-id i3-scrot -dc
 bindsym Ctrl+$mod+Print exec --no-startup-id i3-scrot -wc
-bindsym Ctrl+Shift+Print exec --no-startup-id i3-scrot -sc
+bindsym --release Ctrl+Shift+Print exec --no-startup-id i3-scrot -sc
 
 # bindsym $mod+Shift+h exec xdg-open /usr/share/doc/manjaro/i3_help.pdf
 bindsym $mod+Ctrl+x --release exec --no-startup-id xkill
