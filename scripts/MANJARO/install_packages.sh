@@ -21,40 +21,36 @@ PACKAGES=(
     brave-bin
     community/playerctl
     community/ack
-    docker
-    docker-compose
-    extra/texlive-core
     glibc
     gvim
     jump
-    libreoffice-fresh
+    lazydocker
+    lazygit
     libx11
     masterpdfeditor-free
-    meld
-    networkmanager
-    networkmanager-openvpn
-    network-manager-applet
+    ngrok
     nodejs-gitmoji-cli
+    noto-fonts-emoji
     nvidia
-    neovim
     openssh
+    pacman-contrib
     postgresql
+    powershift
     ranger
     simplescreenrecorder
-    skypeforlinux-stable-bin
     screen
-    slack-desktop
-    spotify
+    systemd-numlockontty
+    tailscale
     terminator
     telegram-desktop
-    terraform
     texlive-latexextra
     the_silver_searcher
     tk
     unrar
     unzip
-    whatsapp-nativefier
+    windsurf
     xf86-input-synaptics
+    xkblayout-state
     youtube-dl
     zip
     zoom
@@ -101,6 +97,10 @@ function install_1pw {
     makepkg -si
 }
 
+function install_llama {
+    curl -fsSL https://ollama.com/install.sh | sh
+}
+
 LOG_FILE="log.out"
 echo > $LOG_FILE
 for pkg in ${TO_RM_PACKAGES[@]}; do
@@ -109,5 +109,9 @@ done
 for pkg in ${PACKAGES[@]}; do
     yayInstall $pkg $LOG_FILE
 done
-install_1pw
-install_aws
+if [ -z $(which pulseaudio) ]; then
+    install_pulse
+fi
+install_llama
+# install_1pw
+# install_aws
