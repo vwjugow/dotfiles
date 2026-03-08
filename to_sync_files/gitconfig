@@ -1,6 +1,7 @@
 [user]
 	name = Victor Wjugow
-	email = victorwjugow@gmail.com
+	email = victorwjugow+gh@gmail.com
+	signingkey = D8A1D964DF22F89E
 [core]
 	editor = vim
 	excludesfile = ~/.gitignore_global
@@ -47,4 +48,6 @@
 [init]
 	defaultBranch = master
 [gpg]
-	format = ssh
+	format = openpgp
+[commit]
+	gpgsign = true
