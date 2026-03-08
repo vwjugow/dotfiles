@@ -9,12 +9,14 @@ alias mcp="mvnrun clean package -Dmaven.test.skip=true -o -T $MAVEN_THREADS $@"
 alias mi="mvnrun install -DskipTests -o -T $MAVEN_THREADS $@"
 alias mp="mvnrun package -DskipTests -o -T $MAVEN_THREADS $@"
 alias mcheck="mvnrun checkstyle:checkstyle -o -T $MAVEN_THREADS $@"
+
  # BDD
 alias bdd="mvn clean verify -Dwebdriver.base.url=http://localhost:8888 -Pcurrent -o"
 function rbdd() {
 	mvn thucydides:aggregate;
 	google-chrome target/site/thucydides/index.html;
 }
+
  # Lille
 function mil () {
 	mvnrun -o -T $MAVEN_THREADS $@ install -Pdev,sdm -DskipTests -Dcheckstyle.skip=true -Dgwt.compiler.skip=true -DuseIncrementalCompilation=false
@@ -27,11 +29,13 @@ function milg () {
 }
 noCheckstyle="-Dcheckstyle.skip=true"
 gwtOpts="-Dgwt.codeServer.precompile=false -Dgwt.style=PRETTY -Dgwt.draftCompile=true"
+
 # gwt
 alias mgwtcl="mvnrun gwt:clean -o $@"
 alias mgwtrn="mvnrun gwt:run -DskipTests -o -Pdevmode $noCheckstyle $gwtOpts -Dgwt.noserver=true -Dgwt.superDevMode=false  $@"
 alias mgwtdg="mvnrun gwt:debug -DskipTests -o -Psdm $noCheckstyle $gwtOpts -Dgwt.noserver=true -Dgwt.superDevMode=false -Dgwt.debugPort=8957 $@"
 alias mgwtcs="mvnrun gwt:run-codeserver -o $noCheckstyle $gwtOpts $@"
+
 # jetty
 alias mdgopts="export MAVEN_OPTS='-Xdebug -Xnoagent -Djava.compiler=NONE -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n'"
 alias mjetty="mvnrun jetty:run -o -Pjetty,hotswap -Djetty.port=8080 -DskipTests $noCheckstyle"
@@ -42,6 +46,7 @@ function mdtest() { mvnDebug test -DforkCount=0 -DuseIncrementalCompilation=fals
 function mtl() { mvnrun test -o -Dtest=$1 $noCheckstyle -rf :$2 -Pdev -DfailIfNoTests=false -Pdbstage; }
 alias mexec="mvn exec:java" # -Dexec.mainClass="com.example.Main" -Dexec.args="arg0 arg1"
 # END MAVEN
+
 # GIT
 alias g="git"
 alias gg="git gui &"
@@ -49,6 +54,7 @@ alias gk="gitk &"
 alias gcib="git br | xargs -I branch  git ci -m branch"
 alias gdbi="(git f master || git p) && git co master && git branch --merged | decolorify | sed 's/^\(\s\|\*\)*//' | grep -v 'master' | xargs -I vranch git branch -d vranch"
 alias gdbd="(git f development || git p) && git co development && git branch --merged | decolorify | sed 's/^\(\s\|\*\)*//' | grep -v 'master\|development' | xargs -I vranch git branch -d vranch"
+alias gdbm="(git f main || git p) && git co main && git branch --merged | decolorify | sed 's/^\(\s\|\*\)*//' | grep -v 'main' | xargs -I vranch git branch -d vranch"
 alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
 alias configk="cd $HOME/.cfg && (gitk &) && cd - > /dev/null"
 alias gbc="git br | xc"
@@ -89,6 +95,7 @@ function gdif() {
     fi;
 }
 # END GIT
+
 # SERVERS
 alias w6="~/Documents/dev/servers/jboss-eap-6.1/bin/standalone.sh"
 alias cw6="rm -f ~/Documents/dev/servers/jboss-eap-6.1/standalone/deployments/*war; rm -df ~/Documents/dev/servers/jboss-eap-6.1/standalone/deployments/*war*; rm -f ~/Documents/dev/servers/jboss-eap-6.1/standalone/deployments/*jar; rm -df ~/Documents/dev/servers/jboss-eap-6.1/standalone/deployments/*jar*;"
@@ -100,6 +107,7 @@ alias w8="~/Documents/dev/servers/wildfly-8.2.1.Final/bin/standalone.sh"
 alias cw8="rm ~/Documents/dev/servers/wildfly-8.2.1.Final/standalone/deployments/*war; rm -d ~/Documents/dev/servers/wildfly-8.2.1.Final/standalone/deployments/*war*;"
 alias dw8="cp -vf target/*.war ~/Documents/dev/servers/wildfly-8.2.1.Final/standalone/deployments; cp -vf target/*.jar ~/Documents/dev/servers/wildfly-8.2.1.Final/standalone/deployments;"
 # END SERVERS
+
 # SQL
 alias sqlDevLille="sqlplus64 '$LG_DB_DEV_USER/$LG_DB_DEV_PW@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(Host=ehr-db.dev.int.aws.lillegroup.com)(PORT=2483))(CONNECT_DATA=(SID=ehrdev)))'"
 alias gqlDevLille="gqlplus '$LG_DB_DEV_USER/$LG_DB_DEV_PW@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(Host=ehr-db.dev.int.aws.lillegroup.com)(PORT=2483))(CONNECT_DATA=(SID=ehrdev)))'"
@@ -112,11 +120,13 @@ function fwClean() { mvn flyway:repair -Dflyway.configFile=$1; }
 #alias postgresRhc="psql -h localhost -p $PORT $DB $USER"
 alias bcmysql="mysql -u docker -P 3307 -h localhost --protocol=tcp -p"
 # END SQL
+
 ## Kubectl
-alias kc=kubectl
-alias kca="kubectl apply -f"
-alias kce="kubectl get events --sort-by=.metadata.creationTimestamp"
+alias k=kubectl
+alias ka="kubectl apply -f"
+alias ke="kubectl get events --sort-by=.metadata.creationTimestamp"
 ## END Kubectl
+
 # DOCKER
 function uiDockerExec() {
 	docker ps | grep docker_ui | awk '{print $1}' | xargs -I id docker exec -i id $*
@@ -141,6 +151,7 @@ function drmi() { # drmi bankers
 }
 alias dprune="docker system prune -a -f --volumes"
 # END DOCKER
+
 # RHC
 function rhcsshkeyadd() { rhc sshkey-add $1 $HOME/.ssh/id_rsa.pub; }
 alias rhcserveradd="rhc server add $1 $2 -k"
@@ -151,6 +162,7 @@ alias rhcprod="rhc server use prod"
 alias rhcit="rhc server use it"
 alias rhcvic="rhc setup -l $RHC_USER -p $RHC_PW --server openshift.redhat.com"
 # END RHC
+
 ### AWS
 alias tf=terraform
 alias tfa="terraform apply"
@@ -188,14 +200,37 @@ function ecsd {
         --service ${AWS_SERVICE} --force-new-deployment
 }
 ### END AWS
+
 # LINUX DIAGNOSTICS
 alias procesos="ps -ef | grep -v grep | egrep"
 alias lsmount="mount | grep \"/media/$USER/\"" #| cut -d\" \" -f1"
 alias lsfs="df -Th"
+alias lsdir="du -h --max-depth=1"
 alias lsmem="free -h"
 alias lsusers="getent passwd | cut -d ':' -f 1"
 alias lsgroups="cat /etc/group | cut -d ' ' -f 1"
+alias sysinfo="inxi -Fazy"
+alias pciinfo="mhwd -li -l"
+
+# Arch linux
+alias yi='yay -S'              # Install package
+alias yis='yay -S --needed'    # Install only if not already installed
+alias yid='yay -S --asdeps'    # Install as dependency
+alias yu='yay -R'              # Remove package
+alias yus='yay -Rs'            # Remove package and unused dependencies
+alias yun='yay -Rns'           # Remove package, dependencies, and config files
+alias ys='yay -Ss'             # Search packages
+alias ysi='yay -Si'            # Show package info
+alias yls='yay -Qe'             # List explicitly installed packages
+alias ylst='yay -Q'             # List installed packages
+alias ylsi='yay -Qi'            # Show info for installed package
+alias yup='yay -Syu'            # Update system
+alias yc='yay -Sc'             # Clean package cache
+alias ycc='yay -Scc'           # Clean all package cache
+alias yo='yay -Rns $(yay -Qtdq)' # Remove orphaned packages
+alias yupd='yay -Syu --devel'   # Update including AUR devel packages
 # END CHEATS
+
 # Laburos
 ## Skydropx
 function sxgetenv {
@@ -428,5 +463,6 @@ alias lines_to_list="sed -e 's/\\n/ /g'"
 alias fix_external_kb="setxkbmap -layout us,es,ru -variant ,ast,phonetic_YAZHERTY -option 'grp:alt_shift_toggle'"
 alias sleft="xrandr --output VGA-1 --auto --left-of eDP-1"
 alias sright="xrandr --output VGA-1 --auto --right-of eDP-1"
-alias ssame="xrandr --output VGA1 --auto --same-as eDP-1"
+alias ssame="xrandr --output VGA-1 --auto --same-as eDP-1"
+alias audio="pavucontrol"
 # END OTHERS
