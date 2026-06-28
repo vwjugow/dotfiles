@@ -7,6 +7,7 @@
 
 - link:
     ~/.config/picom/picom.conf: picom.conf
+    ~/.config/redshift/redshift.conf: redshift.conf
     ~/.fzf.zsh: fzf.zsh
     ~/.fzf: ../fzf
     ~/.git-prompt.sh: git-prompt.sh

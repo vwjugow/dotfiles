@@ -37,6 +37,7 @@ PACKAGES=(
     postgresql
     powershift
     ranger
+    redshift
     simplescreenrecorder
     screen
     systemd-numlockontty
