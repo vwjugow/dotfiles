@@ -17,3 +17,7 @@ asdf install python latest
 
 # Docker
 # sudo usermod -a -G docker `whoami`
+#
+# SSH
+sudo systemctl enable sshd
+sudo systemctl start sshd
