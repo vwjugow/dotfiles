@@ -12,3 +12,11 @@ if [[ $DISTRO == "MANJARO" ]]; then
     fi
     yay
 fi
+if [[ $DISTRO == "MAC" ]]; then
+    DEP_MGR="brew"
+    if [[ -z $(which ${DEP_MGR}) ]]; then
+        echo "Installing ${DEP_MGR}"
+        /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    fi
+    ${DEP_MGR} update
+fi
