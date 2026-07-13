@@ -387,6 +387,7 @@ function spl_chk_es() {
 }
 alias refresh_ipv6_settings="sudo sysctl -p"
 alias clean_docker="docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v /etc:/etc -e REMOVE_VOLUMES=1 spotify/docker-gc"
+alias dlsm="docker inspect docker-britecore-1 --format '\{\{range .Mounts\}\}\{\{.Source\}\} -> \{\{.Destination\}\}\{\{"\\n"\}\}\{\{end\}\}'"
     # NVM
 function load_nvm() {
     [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
@@ -406,6 +407,10 @@ alias sleft="xrandr --output VGA-1 --auto --left-of eDP-1"
 alias sright="xrandr --output VGA-1 --auto --right-of eDP-1"
 alias ssame="xrandr --output VGA-1 --auto --same-as eDP-1"
 alias audio="pavucontrol"
+alias pg_start="launchctl load ~/Library/LaunchAgents"
+alias pg_stop="launchctl unload ~/Library/LaunchAgents"
+alias ulkc="security unlock-keychain ~/Library/Keychains/login.keychain-db"
+alias mysql84='/opt/homebrew/opt/mysql-client@8.4/bin/mysql'
 alias cld="claude --dangerously-skip-permissions"
 alias cdx="codex --full-auto"
 # END OTHERS
