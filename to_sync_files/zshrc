@@ -6,7 +6,6 @@ if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]
 fi
 
 # If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
 export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:${PATH}"
 
 # Path to your oh-my-zsh installation.
@@ -137,3 +136,11 @@ export PIP_EXTRA_INDEX_URL=https://pypi.org/simple/
 # See ~/.zsh_secrets.example for the expected format.
 [ -f ~/.zsh_secrets ] && source ~/.zsh_secrets
 export GPG_TTY=$(tty)
+
+# Britecore
+export AWS_DEFAULT_PROFILE=bcpro
+export AWS_PROFILE=bcpro
+export BRITECORE_CODE_DIR="${HOME}/Documents/computing/dev/projects/iws/BriteCore"
+export BRITECORE_DATA_LOAD_DIR=~/bc-local-data-load
+export KIND_EXPERIMENTAL_PROVIDER=podman
+
