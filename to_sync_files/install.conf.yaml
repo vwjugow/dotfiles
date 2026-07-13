@@ -31,3 +31,7 @@
         force: true
     ~/.scripts: scripts
     # /etc/X11/xorg.conf.d/70-synaptics.conf: 70-synaptics.conf
+
+- shell:
+    - command: '[ -f ~/.zsh_secrets ] || cp zsh_secrets.example ~/.zsh_secrets'
+      description: Seed ~/.zsh_secrets from template if missing (holds untracked credentials)
