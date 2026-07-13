@@ -144,3 +144,7 @@ export BRITECORE_CODE_DIR="${HOME}/Documents/computing/dev/projects/iws/BriteCor
 export BRITECORE_DATA_LOAD_DIR=~/bc-local-data-load
 export KIND_EXPERIMENTAL_PROVIDER=podman
 
+# bun
+export BUN_INSTALL="$HOME/.bun"
+export PATH="$BUN_INSTALL/bin:$PATH"
+[ -s "${HOME}/.bun/_bun" ] && source "${HOME}/.bun/_bun"
