@@ -136,3 +136,4 @@ export PIP_EXTRA_INDEX_URL=https://pypi.org/simple/
 # Secrets (tokens, credentials) live in an untracked local file, not in this repo.
 # See ~/.zsh_secrets.example for the expected format.
 [ -f ~/.zsh_secrets ] && source ~/.zsh_secrets
+export GPG_TTY=$(tty)
