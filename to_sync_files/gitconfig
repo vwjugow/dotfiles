@@ -1,7 +1,7 @@
 [user]
 	name = Victor Wjugow
-	email = victorwjugow+gh@gmail.com
-	signingkey = D8A1D964DF22F89E
+	email = victorwjugow@gmail.com
+	signingkey = /Users/victorwjugow/.ssh/id_ed25519.pub
 [core]
 	editor = vim
 	excludesfile = ~/.gitignore_global
@@ -53,10 +53,14 @@
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
 [gpg]
-	format = openpgp
+	format = ssh
+	program = /opt/homebrew/bin/gpg
 	process = git-lfs filter-process
 [commit]
 	gpgsign = true
+	gpgsigningkey = 3298538A64410116
+[tag]
+	gpgSign = true
 [pull]
 	rebase = true
 [rebase]
