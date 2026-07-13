@@ -55,9 +55,26 @@ alias gcib="git br | xargs -I branch  git ci -m branch"
 alias gdbi="(git f master || git p) && git co master && git branch --merged | decolorify | sed 's/^\(\s\|\*\)*//' | grep -v 'master' | xargs -I vranch git branch -d vranch"
 alias gdbd="(git f development || git p) && git co development && git branch --merged | decolorify | sed 's/^\(\s\|\*\)*//' | grep -v 'master\|development' | xargs -I vranch git branch -d vranch"
 alias gdbm="(git f main || git p) && git co main && git branch --merged | decolorify | sed 's/^\(\s\|\*\)*//' | grep -v 'main' | xargs -I vranch git branch -d vranch"
+gdba() {
+    target=${1:-main}
+    git fetch origin "$target" 2>/dev/null
+    git checkout "$target" || return 1
+    protect='^(master|develop|dev|development|main)$'
+    git branch --merged "$target" | awk '{sub(/^[*+ ]+/,"");
+    print}' | grep -Ev "$protect" | while read -r b; do
+      [ -n "$b" ] && echo "> Deleting $b" && git branch -D "$b"
+    done
+    git branch --no-merged "$target" | awk '{sub(/^[*+ ]+/,"");
+    print}' | grep -Ev "$protect" | while read -r b; do
+      [ -z "$b" ] && continue
+      if ! git cherry "$target" "$b" | grep -q '^+'; then
+        echo "> Deleting squash-merged $b"
+        git branch -D "$b"
+      fi
+    done
+}
 alias config='/usr/bin/git --git-dir=$HOME/.cfg/ --work-tree=$HOME'
 alias configk="cd $HOME/.cfg && (gitk &) && cd - > /dev/null"
-alias gbc="git br | xc"
 alias gmr="~/.scripts/git_multiple_rebase.sh"
 alias lsg="git ls-tree --name-only HEAD"
 function gadd() {
@@ -71,9 +88,21 @@ function gusg() {
 function gsc() { # git search commits
     limit=$1
     text=$2
+    start_at=$3
+    file=$4
     i=0
-    for commit in `git log --oneline -n $limit | decolorify | awk '{print $1}'`;
+    if [[ -z $file ]]; then
+        file="."
+    fi
+    for commit in $(git log --oneline -n $limit -- $file | decolorify | awk '{print $1}');
     do
+        if [[ $((i % 1000)) -eq 0 ]]; then
+            echo "Checking commit HEAD~$i"
+        fi
+        if [[ ${i} -lt ${start_at} ]]; then
+            (( i+=1 ))
+            continue
+        fi
         diff=`git show $commit -p | grep -e "$text"`;
         if [[ ! -z $diff ]]; then
             echo "Commit: $commit (maybe: HEAD~${i})"
@@ -232,6 +261,11 @@ alias yupd='yay -Syu --devel'   # Update including AUR devel packages
 
 alias pbcopy='xclip -selection clipboard'
 alias pbpaste='xclip -selection clipboard -o'
+alias gbc="git br | pbcopy"
+function folder_storage {
+    folder=$1
+    du -h $1 | sort -rh | head -n 10
+}
 # END CHEATS
 
 # Laburos
@@ -250,6 +284,44 @@ alias se="sem edit secret"
 
 ### END Laburos
 # BriteCore
+alias wheredcbc="docker inspect docker-britecore-1 --format='{{range .Mounts}}{{.Source}} -> {{.Destination}}{{\"\\n\"}}{{end}}' | grep -i 'code\/britecore' | cut -d ' ' -f 1"
+function bbsiteshell() {
+    local site="$1" cluster="test"
+    shift
+    if [[ "$1" == "--platform" ]]; then cluster="$2"; else [[ -n "$1" ]] && cluster="$1"; fi
+    britecore-cli connect --shell --site-name "$site" --cluster "platform-$cluster"
+    kubectl config use-context k3d-bc-local
+}
+function bbsitedb() {
+    local site="$1" cluster="test"
+    shift
+    if [[ "$1" == "--platform" ]]; then cluster="$2"; else [[ -n "$1" ]] && cluster="$1"; fi
+    britecore-cli connect --db --site-name "$site" --cluster "platform-$cluster"
+    kubectl config use-context k3d-bc-local
+}
+function kctx() {
+    kubectl config get-contexts
+}
+function bbsiterun() {
+  # Usage: bbsiterun <site> [--platform <cluster>] <command...>
+  local site="$1" cluster="test"
+  shift
+  if [[ "$1" == "--platform" ]]; then cluster="$2"; shift 2; fi
+  local cmd="$*"
+  if [[ -z "$site" || -z "$cmd" ]]; then
+    echo "usage: bbsiterun <site> [--platform <cluster>] <command...>" >&2
+    return 1
+  fi
+  local exec_line
+  exec_line="$(britecore-cli connect --shell --site-name "$site" --cluster "platform-$cluster" --dry-run 2>/dev/null | grep '^kubectl .* exec ')"
+  if [[ -z "$exec_line" ]]; then
+    echo "bbsiterun: could not resolve pod for '$site' on platform-$cluster" >&2
+    return 1
+  fi
+  exec_line="${exec_line/ exec -it / exec -i }"   # non-interactive
+  exec_line="${exec_line%% -- *}"                  # strip trailing '-- bash'
+  eval "$exec_line -- bash -lc 'cd /code/britecore && $cmd'"
+}
 alias recreate_executor="cd /Users/vwjugow/Documents/code/iws/executor && docker-compose stop && git stash save \"stashed by script\" && docker-compose --build"
 alias recreate_executor_for_testing="cd /Users/vwjugow/Documents/code/iws/executor; echo 'unstash the correct changes and run mvn clean package -DskipTests'"
 
@@ -341,31 +413,6 @@ function brtc() {
     fi;
     coverage run -m pytest $py_clear_cache -k $1
 }
-function ssh_smore() { # ssh_smore victor 16649 false
-    query=$1
-    pr=$2
-    update_ssh=$3
-    if [[ -z ${pr} ]]; then
-        echo "te olvidaste el numero de pr kpi"
-    else
-        echo "sudo su -"
-        echo ""
-        echo "cd /srv/www/britecore && git stash && git iws pullrequest ${pr} && git stash pop && supervisorctl restart all;"
-        # echo 'function update_bc() { PR=$1; cd /srv/www/britecore && git fetch upstream pull/${PR}/head:pr_${PR} && git checkout pr_${PR} && supervisorctl restart britecore; }'
-        if [[ ${update_ssh} ]]; then
-            update-ssh;
-        fi
-        server=`tsh ls | grep $query | cut -d " " -f 1`
-        echo "tsh ssh vwjugow@${server}"
-        tsh ssh vwjugow@${server}
-    fi
-}
-function spro () { # frederick-victor arn:aws:lambda:us-east-1:326923731364:function:FrederickSTPRules-prod
-    echo "update settings set value = 0 where settings.option like '%briteauth%';"
-    echo "update settings set value = '{\"url\": \"$2\"}' where settings.option like '%straight%';"
-    load_britedevenv
-    nohup sequelpro $1
-}
 alias ave="source .venv/bin/activate"
 function bcflake8() { # bcflake8 [Number of previous commits to compare against]
 	if [ -z $1 ]; then
@@ -376,6 +423,35 @@ function bcflake8() { # bcflake8 [Number of previous commits to compare against]
 	FLAKE_ERRORS=$( python -m flake8 --config .flake8 --diff < head_diff )
 	rm head_diff
 	echo $FLAKE_ERRORS
+}
+function _resolve_test_path() {
+  local INPUT=$1
+  if [[ "$INPUT" == *"/"* ]]; then
+      echo "/code/britecore/${INPUT#./}"
+  elif [[ "$INPUT" == *"."* && "$INPUT" != *.py ]]; then
+      echo "/code/britecore/${INPUT//./\/}.py"
+  else
+      local LOCAL_FILE=$(timeout 5 find . -path "./tests/*" -name "${INPUT}.py" -type f -maxdepth 4 2>/dev/null | head -n 1)
+      if [[ -z "$LOCAL_FILE" ]]; then
+          echo "ERROR: Could not find test file: $INPUT (tried searching for ${INPUT}.py under ./tests/*)" >&2
+          return 1
+      fi
+      echo "/code/britecore/${LOCAL_FILE#./}"
+  fi
+}
+function bct() {
+  local TEST_FILE=$(_resolve_test_path "$1")
+  [[ "$TEST_FILE" == ERROR* ]] && return 1
+  local K_FLAG=""
+  if [[ -n "$2" ]]; then
+      K_FLAG="-k '$2'"
+      shift 2
+  else
+      shift
+  fi
+  local CMD="source /code/.venv3/bin/activate && DATABASE_NAME=\$DATABASE_NAME_FOR_TESTS /code/britecore/run.py test $TEST_FILE $K_FLAG --database-name \$DATABASE_NAME_FOR_TESTS $*"
+  echo "Running: dce britecore bash -c \"$CMD\""
+  dce britecore bash -c "$CMD"
 }
 function bctests() { # tests/unit_tests/test_lib_policies_utils.py::TestUnderwritingRuleEnforcer:test_name
     test_query=$1
@@ -394,11 +470,89 @@ function bc_rename_rule () {
     sed -e "s/${name}/${new_name}/g" -i "" $tgt_file
 }
 function bcurl() {
-    echo $1 | sed -e 's:/britecore/policies/.*\?:/agent/policies/wizard/policy_setup\?:' | sed -E 's/\\//g'| pbcopy && pbpaste | sed -E 's/\\//g'
+    echo $1 | perl -pe 's:/britecore/policies/.*\?:/agent/policies/wizard/policy_setup\?:' | sed -E 's/\\//g'| pbcopy && pbpaste | sed -E 's/\\//g'
 }
-
+function bc-tunnel {
+    BC_DB_PORT=3308
+    if ! [ $1 ] || ! [ $2 ]; then
+        echo "Please pass BC site name and gh username"
+        echo "E.g: bc-tunnel augusta-uat-new big_foot"
+    else
+        if [ $3 ]; then
+            BC_DB_PORT=$3
+        fi
+        echo "Using local port $BC_DB_PORT"
+        GH_USERNAME="$2"
+        SERVER_NAME=($(tsh ls | grep "^$1" | cut -d' ' -f1))
+        echo "Retrieving credentials..."
+        DB_DETAILS=$(tsh ssh "$GH_USERNAME@$SERVER_NAME" /srv/www/britecore/.venv/bin/python /srv/www/britecore/bin/encrypt_britecore_cfg.py --in-file /srv/www/britecore/britecore.cfg --decrypt | grep database -A 8)
+        echo "Updating .env"
+        BC_DB_NAME=$(echo $DB_DETAILS | perl -lne "print for /^name = (.+)/")
+        BC_DB_PASS=$(echo $DB_DETAILS | perl -lne "print for /^pass = (.+)/")
+        BC_DB_USER=$(echo $DB_DETAILS | perl -lne "print for /^user = (.+)/")
+        echo "BC_DB_NAME=$BC_DB_NAME"
+        echo "BC_DB_PASS=$BC_DB_PASS"
+        echo "BC_DB_USER=$BC_DB_USER"
+        echo "BC_DB_PORT=$BC_DB_PORT"
+        echo "Creating tunnel"
+        echo ""
+        tsh ssh -L "$BC_DB_PORT:$1.cluster-chwjvuzxkgh9.us-east-1.rds.amazonaws.com:3306" "$GH_USERNAME@$SERVER_NAME"
+    fi
+}
+bcnpmlg() {
+    aws codeartifact login \
+     --tool npm \
+     --domain britecore \
+     --domain-owner 313750358190 \
+     --repository npm-all \
+     --region us-east-1
+}
+bcpiplg() {
+    aws codeartifact login \
+     --tool pip \
+     --domain britecore \
+     --domain-owner 313750358190 \
+     --repository pypi-all \
+     --region us-east-1
+}
+bclogin() {
+    aws sso login --profile bcpro
+    bcpiplg
+    bcnpmlg
+}
+bcupg() {
+    gh auth token | xargs -I{} uv tool install --python=3.14 \
+    --compile-bytecode 'git+https://x-access-token:{}@github.com/IntuitiveWebSolutions/britecore-cli.git@v2.1.5'
+}
+bbs3() {
+    local carrier="$1"
+    local ptid="$2"
+    local bbsite="$3"
+    local prefix="${ptid:0:2}"
+    local dryrun=""
+    if [[ "$4" == "-d" ]]; then
+      dryrun="--dryrun"
+    fi
+    local cmd="aws s3 cp \
+      s3://britecorepro-assets/${carrier}/uploads/policy_types/${prefix}/${ptid} \
+      s3://britecorepro-test/${bbsite}/uploads/policy_types/${prefix}/${ptid} \
+      --recursive $dryrun"
+    local output
+    output=$(eval "$cmd" 2>&1)
+    local rc=$?
+    if [[ $rc -ne 0 && "$output" == *"Token has expired and refresh failed"* ]]; then
+      echo "SSO token expired, re-authenticating..."
+      aws sso login --profile bcpro
+      output=$(eval "$cmd" 2>&1)
+      rc=$?
+    fi
+    echo "$output"
+    return $rc
+}
 # End BriteCore
 # OTHERS
+alias lzg="lazygit"
+alias lzd="lazydocker"
 function epub2mobi() { ebook-convert $1 $(basename $1 ".epub")".mobi"; }
 alias xc="xclip -selection clipboard"
 alias restartNetwork="sudo service network-manager restart"
@@ -468,4 +622,6 @@ alias sleft="xrandr --output VGA-1 --auto --left-of eDP-1"
 alias sright="xrandr --output VGA-1 --auto --right-of eDP-1"
 alias ssame="xrandr --output VGA-1 --auto --same-as eDP-1"
 alias audio="pavucontrol"
+alias cld="claude --dangerously-skip-permissions"
+alias cdx="codex --full-auto"
 # END OTHERS
