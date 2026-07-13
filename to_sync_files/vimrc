@@ -543,8 +543,9 @@ let g:ale_fixers = {
 \    'json': []
 \}
 let g:ale_linters = {
-\   'python': ['flake8']
+\   'py': ['flake8']
 \}
+let g:ale_python_flake8_use_global = 1
 let g:ale_fix_on_save = 1
 set re=2  " fix syntax highlighting on ts files
 
@@ -614,7 +615,7 @@ Plug 'airblade/vim-gitgutter' "git
 Plug 'tpope/vim-fugitive' "git wrapper
 Plug 'tpope/vim-unimpaired' "git wrapper extras
 " Plug 'junegunn/fzf', { 'do': { () -> fzf#install() } }
-Plug '~/.fzf'
+Plug '~/.fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim' "fuzzy file search
 Plug 'mileszs/ack.vim' "Ag, find text
 Plug 'terryma/vim-multiple-cursors'
