@@ -126,6 +126,8 @@ export LC_TYPE=en_US.UTF-8
 . ~/.scripts/aliases.sh
 
 # Jump
-eval "$(jump shell)"
+if command -v jump >/dev/null 2>&1; then
+  eval "$(jump shell)"
+fi
 
 export PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/bin/chromium
