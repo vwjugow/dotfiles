@@ -499,21 +499,28 @@ function bc-tunnel {
         tsh ssh -L "$BC_DB_PORT:$1.cluster-chwjvuzxkgh9.us-east-1.rds.amazonaws.com:3306" "$GH_USERNAME@$SERVER_NAME"
     fi
 }
+# Refresh CodeArtifact tokens WITHOUT resetting the default registry/index.
+# Public npm/PyPI stay the default (no auth for everyday work); CodeArtifact is
+# only used for the @britecore/@fortawesome (npm) and private (pip) packages.
+_bc_ca_token() {
+    aws codeartifact get-authorization-token \
+        --domain britecore --domain-owner 313750358190 \
+        --region us-east-1 --query authorizationToken --output text
+}
 bcnpmlg() {
-    aws codeartifact login \
-     --tool npm \
-     --domain britecore \
-     --domain-owner 313750358190 \
-     --repository npm-all \
-     --region us-east-1
+    local token; token=$(_bc_ca_token) || return 1
+    npm config set //britecore-313750358190.d.codeartifact.us-east-1.amazonaws.com/npm/npm-all/:_authToken "$token"
+    echo "CodeArtifact npm token refreshed (default registry stays public npm)."
 }
 bcpiplg() {
-    aws codeartifact login \
-     --tool pip \
-     --domain britecore \
-     --domain-owner 313750358190 \
-     --repository pypi-all \
-     --region us-east-1
+    local token; token=$(_bc_ca_token) || return 1
+    mkdir -p ~/.config/pip
+    cat > ~/.config/pip/pip.conf <<EOF
+[global]
+index-url = https://pypi.org/simple/
+extra-index-url = https://aws:${token}@britecore-313750358190.d.codeartifact.us-east-1.amazonaws.com/pypi/pypi-all/simple/
+EOF
+    echo "CodeArtifact pip token refreshed (default index stays public PyPI)."
 }
 bclogin() {
     aws sso login --profile bcpro
