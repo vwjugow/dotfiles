@@ -185,8 +185,6 @@ alias ycc='yay -Scc'           # Clean all package cache
 alias yo='yay -Rns $(yay -Qtdq)' # Remove orphaned packages
 alias yupd='yay -Syu --devel'   # Update including AUR devel packages
 
-alias pbcopy='xclip -selection clipboard'
-alias pbpaste='xclip -selection clipboard -o'
 alias gbc="git br | pbcopy"
 function folder_storage {
     folder=$1
