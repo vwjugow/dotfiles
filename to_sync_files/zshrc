@@ -168,7 +168,7 @@ export PATH="$BUN_INSTALL/bin:$PATH"
 [ -s "${HOME}/.bun/_bun" ] && source "${HOME}/.bun/_bun"
 
 # Created by `pipx` on 2025-01-07 18:48:01
-export PATH="/Users/victorwjugow/.local/bin:$PATH"
+export PATH="${HOME}/.local/bin:$PATH"
 export PATH=$PATH:/Applications/Postgres.app/Contents/Versions/latest/bin/
 export PATH=/opt/homebrew/Cellar/vim/9.1.1050/bin:$PATH
 
@@ -180,4 +180,4 @@ export PATH="/opt/homebrew/opt/mysql-client@8.0/bin:$PATH"
 export PATH="/usr/local/opt/mysql-client/bin:$PATH"
 
 # Others
-export CLAUDE_CONFIG_DIR=/Users/victorwjugow/.claude/projects
+export CLAUDE_CONFIG_DIR="${HOME}/.claude/projects"
