@@ -2,12 +2,13 @@
 
 set -e
 
+git pull --recurse-submodules
 CONFIG="to_sync_files/install.conf.yaml"
 DOTBOT_DIR="dotbot"
 DOTBOT_BIN="bin/dotbot"
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${BASEDIR}"
-git pull --recurse-submodules && git submodule update
+git submodule update --init --recursive
 echo "Submodules updated"
 "${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -c "${CONFIG}" "${@}"
 echo "Dotbot executed"
