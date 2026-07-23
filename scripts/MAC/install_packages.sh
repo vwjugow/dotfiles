@@ -4,6 +4,7 @@ TO_RM_PACKAGES=(
 PACKAGES=(
     coreutils
     findutils
+    git-lfs
     moreutils
     rename
     tree
@@ -22,17 +23,22 @@ PACKAGES=(
     alt-tab
     keka  # 7zip
     awscli
+    tailscale
+    tmux
     zeromq
 )
 
 CASKS=(
     alfred
+    codex
+    # claude-code
+    iterm2
+    rectangle
     spotify
     telegram
     visual-studio-code
     warp
     whatsapp
-    zoomus
 )
 
 function brewInstall {
