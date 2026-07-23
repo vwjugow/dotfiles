@@ -27,12 +27,15 @@ PACKAGES=(
 
 CASKS=(
     alfred
+    codex
+    # claude-code
+    iterm2
+    rectangle
     spotify
     telegram
     visual-studio-code
     warp
     whatsapp
-    zoomus
 )
 
 function brewInstall {
