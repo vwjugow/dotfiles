@@ -28,5 +28,12 @@ fi
 
 ./scripts/install_dependency_manager.sh $DISTRO
 ./scripts/${DISTRO}/install_packages.sh
+
+echo ">>> Installing fzf binary"
+~/.fzf/install --bin --no-completion --no-key-bindings --no-update-rc
+
+echo ">>> Installing vim plugins"
+vim +'PlugInstall --sync' +qa!
+
 ./scripts/${DISTRO}/tweak_configs.sh
 ./scripts/install_shell.sh
