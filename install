@@ -5,7 +5,7 @@ set -e
 BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "${BASEDIR}"
 
-git pull --recurse-submodules
+git pull
 git submodule update --init --recursive
 echo "Submodules updated"
 
