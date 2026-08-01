@@ -37,3 +37,7 @@ vim +'PlugInstall --sync' +qa!
 
 ./scripts/${DISTRO}/tweak_configs.sh
 ./scripts/install_shell.sh
+
+# install_shell.sh may have replaced ~/.oh-my-zsh (which dotbot's
+# custom/themes/powerlevel10k symlink lives under), so relink
+"${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -c "${CONFIG}" "${@}"
