@@ -178,6 +178,3 @@ if command -v brew >/dev/null 2>&1; then
 fi
 export PATH="/opt/homebrew/opt/mysql-client@8.0/bin:$PATH"
 export PATH="/usr/local/opt/mysql-client/bin:$PATH"
-
-# Others
-export CLAUDE_CONFIG_DIR="${HOME}/.claude/projects"
