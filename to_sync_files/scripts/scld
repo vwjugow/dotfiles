@@ -1,0 +1,584 @@
+#!/usr/bin/env python3
+"""Search Claude Code and Codex conversation history and resume sessions.
+
+Scans actual session JSONL files so only resumable sessions are shown.
+
+Usage:
+    scld <query>              Search + pick session to resume (default)
+    scld --no-resume <query>  Just list results, don't resume
+    scld -a <query>           Search assistant responses too
+    scld -p <project> <q>    Filter by project path substring
+    scld -n 20 <query>        Show more results (default: 10)
+    scld --claude-only <q>    Only search Claude Code sessions
+    scld --codex-only <q>     Only search Codex sessions
+
+Examples:
+    scld "auth bug"
+    scld -a "policy summary"
+    scld -p BriteCore "rating engine"
+    scld "endorsement"
+"""
+
+import argparse
+import json
+import os
+import re
+import sys
+from datetime import datetime
+from pathlib import Path
+
+CLAUDE_DIR = Path.home() / ".claude"
+CLAUDE_SESSIONS_DIR = CLAUDE_DIR / "projects"
+CODEX_DIR = Path.home() / ".codex"
+CODEX_SESSIONS_DIR = CODEX_DIR / "sessions"
+
+# ANSI colors
+BOLD = "\033[1m"
+DIM = "\033[2m"
+CYAN = "\033[36m"
+YELLOW = "\033[33m"
+GREEN = "\033[32m"
+MAGENTA = "\033[35m"
+RESET = "\033[0m"
+RED = "\033[31m"
+BLUE = "\033[34m"
+
+# Source labels
+SRC_CLAUDE = "claude"
+SRC_CODEX = "codex"
+
+
+def parse_args():
+    p = argparse.ArgumentParser(description="Search Claude Code and Codex conversations")
+    p.add_argument("query", nargs="+", help="Search terms")
+    p.add_argument("-a", "--assistant", dest="assistant", action="store_true", default=True,
+                   help="Search assistant responses (default: on)")
+    p.add_argument("--no-assistant", dest="assistant", action="store_false",
+                   help="Skip assistant responses")
+    p.add_argument("-p", "--project", default=None,
+                   help="Filter by project path substring")
+    p.add_argument("-n", "--max-results", type=int, default=10,
+                   help="Max sessions to show (default: 10)")
+    p.add_argument("--no-resume", action="store_true",
+                   help="Just list results, don't offer to resume")
+    p.add_argument("--claude-only", action="store_true",
+                   help="Only search Claude Code sessions")
+    p.add_argument("--codex-only", action="store_true",
+                   help="Only search Codex sessions")
+    return p.parse_args()
+
+
+# --- Claude Code session scanning ---
+
+def find_claude_session_files(project_filter=None):
+    """Find Claude Code session JSONL files (excluding subagents)."""
+    results = []
+    if not CLAUDE_SESSIONS_DIR.exists():
+        return results
+    for proj_dir in CLAUDE_SESSIONS_DIR.iterdir():
+        if not proj_dir.is_dir():
+            continue
+        if project_filter and project_filter.lower() not in proj_dir.name.lower():
+            continue
+        for sf in proj_dir.glob("*.jsonl"):
+            if "subagents" in str(sf):
+                continue
+            results.append(sf)
+    return results
+
+
+def encode_project_dir(path):
+    """Encode a cwd the way Claude Code names its per-project session directory."""
+    return re.sub(r"[^A-Za-z0-9]", "-", path)
+
+
+def resolve_resume_cwd(session_file, candidates):
+    """Pick the cwd that `claude --resume <sid>` will actually find the session under.
+
+    Claude Code stores sessions in a directory keyed by the cwd, and a session that
+    did a `/cd` gets relocated into the new cwd's directory. So the only cwd that can
+    resume it is the one whose encoded form matches the containing project directory.
+    """
+    proj_dir_name = session_file.parent.name
+    for cand in candidates:
+        if cand and encode_project_dir(cand) == proj_dir_name:
+            return cand
+    for cand in candidates:
+        if cand:
+            return cand
+    return None
+
+
+def scan_claude_session(session_file, pattern, search_assistant=False):
+    """Scan a Claude Code session file for matches."""
+    user_hits = []
+    assistant_hits = []
+    first_user_msg = None
+    branch = "?"
+    timestamp = None
+    cwd = None
+    cwd_last = None
+    relocated_cwd = None
+    custom_title = None
+    ai_title = None
+    title_match = False
+    branch_match = False
+
+    with open(session_file, "r") as f:
+        for line in f:
+            try:
+                rec = json.loads(line)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                continue
+
+            if timestamp is None and rec.get("timestamp"):
+                timestamp = rec.get("timestamp")
+            if branch == "?" and rec.get("gitBranch"):
+                branch = rec.get("gitBranch")
+                branch_match = bool(pattern.search(branch))
+            if rec.get("cwd"):
+                if cwd is None:
+                    cwd = rec.get("cwd")
+                cwd_last = rec.get("cwd")
+            if rec.get("relocatedCwd"):
+                relocated_cwd = rec.get("relocatedCwd")
+
+            rtype = rec.get("type")
+            if rtype == "custom-title":
+                ct = rec.get("customTitle") or ""
+                if ct:
+                    custom_title = ct
+                    if pattern.search(ct):
+                        title_match = True
+            elif rtype == "ai-title":
+                at = rec.get("aiTitle") or ""
+                if at:
+                    ai_title = at
+                    if pattern.search(at):
+                        title_match = True
+
+            msg = rec.get("message", {})
+            content = msg.get("content", "")
+            if isinstance(content, list):
+                text_parts = []
+                for block in content:
+                    if isinstance(block, dict) and block.get("type") == "text":
+                        text_parts.append(block.get("text", ""))
+                    elif isinstance(block, str):
+                        text_parts.append(block)
+                content = " ".join(text_parts)
+
+            if not isinstance(content, str):
+                continue
+
+            is_user = rec.get("type") == "user" and not rec.get("isMeta")
+            is_assistant = rec.get("type") == "assistant"
+
+            if is_user and first_user_msg is None and len(content.strip()) > 5:
+                first_user_msg = content.strip()
+
+            if is_user and pattern.search(content):
+                user_hits.append(_extract_snippet(content, pattern))
+
+            if search_assistant and is_assistant and pattern.search(content):
+                assistant_hits.append(_extract_snippet(content, pattern))
+
+    return {
+        "branch": branch,
+        "timestamp": timestamp,
+        "cwd": resolve_resume_cwd(session_file, [relocated_cwd, cwd_last, cwd]),
+        "start_cwd": cwd,
+        "first_user_msg": first_user_msg,
+        "user_hits": user_hits,
+        "assistant_hits": assistant_hits,
+        "title": custom_title or ai_title,
+        "title_match": title_match,
+        "branch_match": branch_match,
+    }
+
+
+# --- Codex session scanning ---
+
+def find_codex_session_files(project_filter=None):
+    """Find Codex session JSONL files."""
+    if not CODEX_SESSIONS_DIR.exists():
+        return []
+    results = []
+    for sf in CODEX_SESSIONS_DIR.rglob("*.jsonl"):
+        results.append(sf)
+    return results
+
+
+def scan_codex_session(session_file, pattern, search_assistant=False, project_filter=None):
+    """Scan a Codex session file for matches."""
+    user_hits = []
+    assistant_hits = []
+    first_user_msg = None
+    timestamp = None
+    cwd = None
+    branch = "?"
+    branch_match = False
+
+    with open(session_file, "r") as f:
+        for line in f:
+            try:
+                rec = json.loads(line)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                continue
+
+            # Session metadata
+            if rec.get("type") == "session_meta":
+                payload = rec.get("payload", {})
+                if cwd is None:
+                    cwd = payload.get("cwd")
+                if timestamp is None:
+                    timestamp = payload.get("timestamp") or rec.get("timestamp")
+                for key in ("git_branch", "gitBranch", "branch"):
+                    if branch == "?" and payload.get(key):
+                        branch = payload.get(key)
+                        branch_match = bool(pattern.search(branch))
+
+            if timestamp is None and rec.get("timestamp"):
+                timestamp = rec.get("timestamp")
+
+            # User messages
+            if rec.get("type") == "event_msg":
+                payload = rec.get("payload", {})
+
+                if payload.get("type") == "user_message":
+                    text = payload.get("message", "")
+                    if first_user_msg is None and len(text.strip()) > 5:
+                        first_user_msg = text.strip()
+                    if pattern.search(text):
+                        user_hits.append(_extract_snippet(text, pattern))
+
+                if search_assistant and payload.get("type") == "agent_message":
+                    text = payload.get("message", "")
+                    if pattern.search(text):
+                        assistant_hits.append(_extract_snippet(text, pattern))
+
+                item = payload.get("item", {})
+                if item.get("type") == "UserMessage":
+                    text = content_to_text(item.get("content", []))
+                    if first_user_msg is None and len(text.strip()) > 5:
+                        first_user_msg = text.strip()
+                    if pattern.search(text):
+                        user_hits.append(_extract_snippet(text, pattern))
+
+            if rec.get("type") == "response_item":
+                payload = rec.get("payload", {})
+                role = payload.get("role")
+                text = content_to_text(payload.get("content", []))
+                if role == "user":
+                    if first_user_msg is None and len(text.strip()) > 5:
+                        first_user_msg = text.strip()
+                    if pattern.search(text):
+                        user_hits.append(_extract_snippet(text, pattern))
+                elif search_assistant and role == "assistant" and pattern.search(text):
+                    assistant_hits.append(_extract_snippet(text, pattern))
+
+    # Apply project filter based on cwd
+    if project_filter and cwd and project_filter.lower() not in cwd.lower():
+        return None
+
+    return {
+        "branch": branch,
+        "timestamp": timestamp,
+        "cwd": cwd,
+        "first_user_msg": first_user_msg,
+        "user_hits": user_hits,
+        "assistant_hits": assistant_hits,
+        "branch_match": branch_match,
+    }
+
+
+# --- Shared helpers ---
+
+def content_to_text(content):
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        text_parts = []
+        for block in content:
+            if isinstance(block, dict):
+                text_parts.append(block.get("text", "") or block.get("input_text", ""))
+            elif isinstance(block, str):
+                text_parts.append(block)
+        return " ".join(text_parts)
+    return ""
+
+
+def _extract_snippet(content, pattern):
+    """Extract a short snippet around the first match."""
+    m = pattern.search(content)
+    if not m:
+        return content[:100]
+    start = max(0, m.start() - 40)
+    end = min(len(content), m.end() + 80)
+    snippet = content[start:end].replace("\n", " ").strip()
+    if start > 0:
+        snippet = "..." + snippet
+    if end < len(content):
+        snippet = snippet + "..."
+    return snippet
+
+
+def format_timestamp(ts):
+    """Convert ms epoch or ISO string to readable format."""
+    if isinstance(ts, (int, float)):
+        return datetime.fromtimestamp(ts / 1000).strftime("%Y-%m-%d %H:%M")
+    if isinstance(ts, str) and ts:
+        try:
+            dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+            return dt.strftime("%Y-%m-%d %H:%M")
+        except ValueError:
+            return ts[:16]
+    return "?"
+
+
+def sortable_timestamp(ts):
+    """Convert to a sortable string."""
+    if isinstance(ts, str) and ts:
+        return ts
+    if isinstance(ts, (int, float)):
+        return datetime.fromtimestamp(ts / 1000).isoformat()
+    return ""
+
+
+def truncate(text, max_len=100):
+    text = text.replace("\n", " ").strip()
+    if len(text) > max_len:
+        return text[:max_len] + "..."
+    return text
+
+
+def highlight(text, pattern):
+    def replacer(m):
+        return RED + BOLD + m.group(0) + RESET
+    return pattern.sub(replacer, text)
+
+
+def source_badge(source):
+    if source == SRC_CODEX:
+        return BLUE + "[codex]" + RESET
+    return CYAN + "[claude]" + RESET
+
+
+def extract_codex_session_id(filepath):
+    """Extract session ID from codex filename like rollout-2026-04-30T07-32-58-019dddf2-ec0a-....jsonl"""
+    name = filepath.stem
+    # The UUID is the last 5 hyphen-separated groups (standard UUID format)
+    parts = name.split("-")
+    # UUID is 8-4-4-4-12 hex chars. Find it at the end.
+    if len(parts) >= 5:
+        candidate = "-".join(parts[-5:])
+        if len(candidate) == 36:
+            return candidate
+    return name
+
+
+def main():
+    args = parse_args()
+    query = " ".join(args.query)
+    pattern = re.compile(re.escape(query), re.IGNORECASE)
+
+    results = []
+
+    # Scan Claude Code sessions
+    if not args.codex_only:
+        claude_files = find_claude_session_files(args.project)
+        for sf in claude_files:
+            sid = sf.stem
+            info = scan_claude_session(sf, pattern, search_assistant=args.assistant)
+            sid_match = bool(pattern.search(sid))
+            if not sid_match and not info["user_hits"] and not info["assistant_hits"] and not info.get("title_match") and not info.get("branch_match"):
+                continue
+            cwd = info.get("cwd") or ""
+            proj_short = cwd.replace(str(Path.home()), "~") if cwd else "?"
+            start_cwd = info.get("start_cwd") or ""
+            if start_cwd and start_cwd != cwd:
+                proj_short += " (started in {})".format(
+                    start_cwd.replace(str(Path.home()), "~"))
+            results.append({
+                "sid": sid,
+                "source": SRC_CLAUDE,
+                "project": proj_short,
+                "branch": info["branch"],
+                "timestamp": format_timestamp(info["timestamp"]),
+                "timestamp_sort": sortable_timestamp(info["timestamp"]),
+                "user_hits": info["user_hits"][:3],
+                "assistant_hits": info["assistant_hits"][:2],
+                "first_user_msg": info["first_user_msg"],
+                "cwd": cwd,
+                "session_file": sf,
+                "title": info.get("title"),
+                "title_match": info.get("title_match", False),
+            })
+
+    # Scan Codex sessions
+    if not args.claude_only:
+        codex_files = find_codex_session_files(args.project)
+        for sf in codex_files:
+            info = scan_codex_session(sf, pattern, search_assistant=args.assistant,
+                                      project_filter=args.project)
+            if info is None:
+                continue
+            sid = extract_codex_session_id(sf)
+            sid_match = bool(pattern.search(sid))
+            if not sid_match and not info["user_hits"] and not info["assistant_hits"] and not info.get("branch_match"):
+                continue
+            cwd = info.get("cwd") or ""
+            proj_short = cwd.replace(str(Path.home()), "~") if cwd else "?"
+            results.append({
+                "sid": sid,
+                "source": SRC_CODEX,
+                "project": proj_short,
+                "branch": info["branch"],
+                "timestamp": format_timestamp(info["timestamp"]),
+                "timestamp_sort": sortable_timestamp(info["timestamp"]),
+                "user_hits": info["user_hits"][:3],
+                "assistant_hits": info["assistant_hits"][:2],
+                "first_user_msg": info["first_user_msg"],
+                "cwd": cwd,
+                "session_file": sf,
+                "title": None,
+                "title_match": False,
+            })
+
+    # Sort by timestamp descending (newest first)
+    results.sort(key=lambda r: r["timestamp_sort"], reverse=True)
+
+    # Dedup: collapse sessions that look like the same conversation
+    # (same source + cwd + first user message). Keep the newest; merge hits.
+    deduped = []
+    seen = {}
+    for r in results:
+        key = (r["source"], r.get("cwd") or "", (r.get("first_user_msg") or "").strip()[:200])
+        if not key[2]:
+            deduped.append(r)
+            continue
+        if key in seen:
+            existing = seen[key]
+            for snip in r["user_hits"]:
+                if snip not in existing["user_hits"]:
+                    existing["user_hits"].append(snip)
+            for snip in r["assistant_hits"]:
+                if snip not in existing["assistant_hits"]:
+                    existing["assistant_hits"].append(snip)
+            existing["user_hits"] = existing["user_hits"][:3]
+            existing["assistant_hits"] = existing["assistant_hits"][:2]
+            existing["dup_count"] = existing.get("dup_count", 1) + 1
+            continue
+        seen[key] = r
+        deduped.append(r)
+    all_results = deduped
+
+    if not all_results:
+        print("No matches for: {}".format(query))
+        sys.exit(1)
+
+    page_size = args.max_results
+    total = len(all_results)
+    total_pages = (total + page_size - 1) // page_size
+
+    def render_page(page):
+        start = page * page_size
+        end = min(start + page_size, total)
+        print("{}Found {} session(s) matching '{}' - page {}/{}{}\n".format(
+            BOLD, total, query, page + 1, total_pages, RESET))
+        for i in range(start, end):
+            r = all_results[i]
+            print("{}{:>2}) {} {}{}  {}{}{}  branch:{}{}{}  {}".format(
+                BOLD, i + 1,
+                source_badge(r["source"]),
+                DIM, r["timestamp"], RESET,
+                CYAN, r["project"],
+                YELLOW, r["branch"], RESET,
+                DIM + r["sid"] + RESET,
+            ))
+            if r.get("dup_count"):
+                print("    {}(+{} related session(s) collapsed){}".format(DIM, r["dup_count"], RESET))
+            if r.get("title"):
+                title_disp = highlight(r["title"], pattern)
+                print("    {}title:{} {}{}{}".format(YELLOW, RESET, BOLD + YELLOW, title_disp, RESET))
+            if r["user_hits"]:
+                for snip in r["user_hits"]:
+                    print("    {} user: {}{}".format(GREEN + ">" + RESET, highlight(truncate(snip), pattern), RESET))
+            elif r["first_user_msg"]:
+                print("    {} first msg: {}{}".format(DIM + ">" + RESET, truncate(r["first_user_msg"], 90), RESET))
+            if r["assistant_hits"]:
+                for snip in r["assistant_hits"]:
+                    print("    {} asst: {}{}".format(MAGENTA + "<" + RESET, highlight(truncate(snip, 120), pattern), RESET))
+            print()
+
+    page = 0
+    render_page(page)
+
+    if args.no_resume:
+        # Non-interactive: dump remaining pages then exit.
+        for p in range(1, total_pages):
+            render_page(p)
+        return
+
+    while True:
+        try:
+            nav = []
+            if page + 1 < total_pages:
+                nav.append("n=next")
+            if page > 0:
+                nav.append("p=prev")
+            nav.append("q=quit")
+            prompt = "{}Enter number to resume ({}): {}".format(BOLD, ", ".join(nav), RESET)
+            choice = input(prompt).strip().lower()
+        except (KeyboardInterrupt, EOFError):
+            print("\nCancelled.")
+            sys.exit(0)
+        if choice == "q" or choice == "":
+            sys.exit(0)
+        if choice == "n":
+            if page + 1 < total_pages:
+                page += 1
+                print()
+                render_page(page)
+            else:
+                print("Already on last page.")
+            continue
+        if choice == "p":
+            if page > 0:
+                page -= 1
+                print()
+                render_page(page)
+            else:
+                print("Already on first page.")
+            continue
+        try:
+            idx = int(choice) - 1
+        except ValueError:
+            print("Invalid input.")
+            continue
+        if not (0 <= idx < total):
+            print("Invalid selection.")
+            continue
+        r = all_results[idx]
+        sid = r["sid"]
+        cwd = r.get("cwd")
+        source = r["source"]
+        if cwd and os.path.isdir(cwd):
+            print("\ncd {}".format(cwd))
+            os.chdir(cwd)
+        elif cwd:
+            print("\n(dir {} no longer exists, using current dir)".format(cwd))
+        cwd_file = os.environ.get("SCLD_CWDFILE")
+        if cwd_file:
+            with open(cwd_file, "w") as f:
+                f.write(os.getcwd())
+        if source == SRC_CLAUDE:
+            print("Resuming Claude session {}...".format(sid))
+            os.execvp("claude", ["claude", "--dangerously-skip-permissions", "--resume", sid])
+        elif source == SRC_CODEX:
+            print("Resuming Codex session {}...".format(sid))
+            os.execvp("codex", ["codex", "--yolo", "resume", sid])
+
+
+if __name__ == "__main__":
+    main()

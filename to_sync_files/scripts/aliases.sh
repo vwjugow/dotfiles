@@ -405,5 +405,16 @@ alias sright="xrandr --output VGA-1 --auto --right-of eDP-1"
 alias ssame="xrandr --output VGA-1 --auto --same-as eDP-1"
 alias audio="pavucontrol"
 alias cld="claude --dangerously-skip-permissions"
-alias cdx="codex --full-auto"
+alias cdx="codex --yolo"
+# scld execs into claude/codex from a subprocess, so its os.chdir() never reaches
+# this shell. Route the chosen dir through a tempfile and cd here after it exits.
+function scld() {
+  local statefile
+  statefile="$(mktemp)"
+  SCLD_CWDFILE="$statefile" command scld "$@"
+  local exit_status=$?
+  [[ -s "$statefile" ]] && cd "$(cat "$statefile")"
+  rm -f "$statefile"
+  return $exit_status
+}
 # END OTHERS

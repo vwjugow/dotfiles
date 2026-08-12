@@ -30,6 +30,9 @@
         path: zshrc
         force: true
     ~/.scripts: scripts
+    /usr/local/bin/scld:
+        path: scripts/scld
+        force: true
     # /etc/X11/xorg.conf.d/70-synaptics.conf: 70-synaptics.conf
 
 - shell:
