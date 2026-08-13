@@ -35,12 +35,14 @@
 	ls = "!f() { if [ -z $1 ]; then LINES=20; else LINES=$1; fi; git log --oneline --decorate -n $LINES | awk -f ~/.scripts/print_line_number.awk; }; f"
 	pup = "!f() { git push origin `git br`; ~/.scripts/create_pr.sh `git br` $1; }; f"
 	coh = checkout
+	bf = !git --no-pager diff --name-only $(git merge-base $(git base-branch) HEAD) HEAD
 	files = show --pretty=\"\" --name-only
 	orphank = !gitk --all --date-order `git reflog | cut -c1-8` &
 	brs = "!git for-each-ref --sort=-committerdate refs/heads/ --format='%(refname:short)|%(committerdate:relative)|%(authorname)|%(worktreepath)' | awk -F'|' 'BEGIN{Y=\"\\033[33m\";G=\"\\033[32m\";R=\"\\033[31m\";B=\"\\033[34m\";Z=\"\\033[m\"} {n=split($4,a,\"/\"); wt=(a[n]==\"\"?\"\":B a[n] Z); print Y$1Z, \"(\"G$2Z\")\", R$3Z, wt}'"
 	cib = "!f() { git commit -m \"`git br | perl -p -e 's:_\\S+::'` $1\" $2; }; f"
 	cix = "!f() { git commit --fixup=HEAD~$1 $2; }; f"
 	brc = "!f() { branches=$(git for-each-ref --sort=-committerdate refs/heads/ --format=\"%(refname:short)|%(committerdate:relative)|%(authorname)|%(worktreepath)\"); echo \"$branches\" | awk -F\"|\" \"BEGIN{Y=\\\"\\033[33m\\\";G=\\\"\\033[32m\\\";R=\\\"\\033[31m\\\";B=\\\"\\033[34m\\\";C=\\\"\\033[36m\\\";Z=\\\"\\033[m\\\"} {n=split(\\$4,a,\\\"/\\\"); wt=(a[n]==\\\"\\\"?\\\"\\\":B a[n] Z); print C NR\\\")\\\" Z, Y\\$1Z, \\\"(\\\"G\\$2Z\\\")\\\", R\\$3Z, wt}\"; printf \"Select branch number: \"; read num </dev/tty; branch=$(echo \"$branches\" | sed -n \"${num}p\" | cut -d\"|\" -f1); if [ -n \"$branch\" ]; then git checkout \"$branch\"; else echo \"Invalid selection\"; fi; }; f"
+	base-branch = !git config --get base.branch || git symbolic-ref --short refs/remotes/origin/HEAD
 [http]
 [init]
 	defaultBranch = master
