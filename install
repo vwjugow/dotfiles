@@ -30,7 +30,9 @@ fi
 ./scripts/${DISTRO}/install_packages.sh
 
 echo ">>> Installing fzf binary"
-~/.fzf/install --bin --no-completion --no-key-bindings --no-update-rc
+# Build from the submodule directly, not via the ~/.fzf symlink, so this works
+# even if dotbot has not linked it yet. Rebuilds whenever the submodule moves.
+"${BASEDIR}/fzf/install" --bin --no-completion --no-key-bindings --no-update-rc
 
 echo ">>> Installing vim plugins"
 vim +'PlugInstall --sync' +qa!
