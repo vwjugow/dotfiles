@@ -1,7 +1,3 @@
-[user]
-	name = Victor Wjugow
-	email = victorwjugow+gh@gmail.com
-	signingkey = D8A1D964DF22F89E
 [core]
 	editor = vim
 	excludesfile = ~/.gitignore_global
@@ -52,12 +48,13 @@
 	required = true
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
-[gpg]
-	format = openpgp
-	process = git-lfs filter-process
 [commit]
 	gpgsign = true
+[tag]
+	gpgSign = true
 [pull]
 	rebase = true
 [rebase]
 	autoStash = true
+[include]
+	path = ~/.gitconfig.local

@@ -1,0 +1,20 @@
+# Per-machine git settings, included by ~/.gitconfig (see the [include] at the
+# bottom of gitconfig). Copy this to ~/.gitconfig.local and fill in the values
+# for THIS machine. This file is not tracked and not symlinked, so each machine
+# keeps its own identity/signing key, and switching branches in the dotfiles
+# repo (which can carry different values in the tracked gitconfig) never
+# changes it out from under you.
+#
+#   cp to_sync_files/gitconfig.local.example ~/.gitconfig.local
+#
+# SSH signing (key lives in ssh-agent, passphrase-free):
+[user]
+	name = Your Name
+	email = your.email@example.com
+	signingkey = ~/.ssh/id_ed25519.pub
+[gpg]
+	format = ssh
+
+# GPG signing instead: drop the [gpg] block above (format defaults to openpgp)
+# and set signingkey to the key id instead of a path. Find it with:
+#   gpg --list-secret-keys --keyid-format=long
