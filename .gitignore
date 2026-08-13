@@ -1,5 +1,7 @@
 # VIM
 *.sw?
+# vim-plug installs plugins here at runtime; each has its own .git
+to_sync_files/vim/plugged/
 
 # Logs
 log.out
