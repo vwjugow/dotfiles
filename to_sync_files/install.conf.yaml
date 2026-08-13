@@ -29,6 +29,21 @@
     ~/.zshrc:
         path: zshrc
         force: true
+    ~/.claude/CLAUDE.md:
+        path: claude/CLAUDE.md
+        force: true
+    ~/.claude/RTK.md:
+        path: claude/RTK.md
+        force: true
+    ~/.claude/settings.json:
+        path: claude/settings.json
+        force: true
+    ~/.claude/statusline.sh:
+        path: claude/statusline.sh
+        force: true
+    ~/.claude/hooks:
+        path: claude/hooks
+        force: true
     ~/.scripts: scripts
     /usr/local/bin/scld:
         path: scripts/scld
