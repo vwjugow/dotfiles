@@ -140,8 +140,8 @@
   typeset -g POWERLEVEL9K_VCS_COMMIT_ICON='@'
   # Don't show staged, unstaged, untracked indicators.
   typeset -g POWERLEVEL9K_VCS_{STAGED,UNSTAGED,UNTRACKED}_ICON=
-  # Show '*' when there are staged, unstaged or untracked files.
-  typeset -g POWERLEVEL9K_VCS_DIRTY_ICON='*'
+  # Don't show a dirty indicator for staged, unstaged or untracked files.
+  typeset -g POWERLEVEL9K_VCS_DIRTY_ICON=
   # Show '⇣' if local branch is behind remote.
   typeset -g POWERLEVEL9K_VCS_INCOMING_CHANGES_ICON=':⇣'
   # Show '⇡' if local branch is ahead of remote.
