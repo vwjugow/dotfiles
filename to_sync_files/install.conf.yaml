@@ -44,6 +44,14 @@
     ~/.claude/hooks:
         path: claude/hooks
         force: true
+    ~/.claude/agents:
+        path: claude/agents
+        force: true
+    # Link individual skills, not ~/.claude/skills itself: that directory also
+    # holds skills installed outside this repo, which a directory link would delete.
+    ~/.claude/skills/langfuse:
+        path: claude/skills/langfuse
+        force: true
     ~/.scripts: scripts
     /usr/local/bin/scld:
         path: scripts/scld
