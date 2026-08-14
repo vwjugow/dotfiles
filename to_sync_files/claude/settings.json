@@ -10,15 +10,11 @@
       "Bash(rm)"
     ]
   },
-  "model": "sonnet",
+  "model": "opus",
   "hooks": {
     "SessionStart": [
       {
         "hooks": [
-          {
-            "type": "command",
-            "command": "\"/Users/victorwjugow/.claude/hooks/context-mode-cache-heal.mjs\""
-          }
         ]
       }
     ],
