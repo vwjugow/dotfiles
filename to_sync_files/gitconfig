@@ -23,8 +23,8 @@
 	pf = "!f() { branch=`git br`; git fetch origin $branch; git reset origin/$branch --hard; }; f"
 	r = "!f() { git rebase -i HEAD~$1; }; f"
 	acib = "!f() { git add . && git cib \"$*\"; }; f"
-	f = !git fetch origin $1:$1
-	fr = "!f() { git fetch origin $1:$1 && git rebase $1; }; f"
+	f = "!f() { b=${1:-$(git rev-parse --abbrev-ref HEAD)}; wt=$(git worktree list --porcelain | awk -v b=\"branch refs/heads/$b\" \"/^worktree /{p=substr(\\$0,10)} \\$0==b{print p; exit}\"); if [ -n \"$wt\" ]; then env -u GIT_DIR -u GIT_WORK_TREE git -C \"$wt\" fetch origin \"$b\" && env -u GIT_DIR -u GIT_WORK_TREE git -C \"$wt\" merge --ff-only \"origin/$b\"; else git fetch origin \"$b:$b\"; fi; }; f"
+	fr = "!f() { git f \"$1\" && git rebase \"$1\"; }; f"
 	coh = checkout
 	unstage = reset HEAD --
 	undoCommits = "!f() { git reset HEAD~$1; }; f"
