@@ -4,16 +4,20 @@
 Scans actual session JSONL files so only resumable sessions are shown.
 
 Usage:
-    scld <query>              Search + pick session to resume (default)
-    scld --no-resume <query>  Just list results, don't resume
-    scld -a <query>           Search assistant responses too
-    scld -p <project> <q>    Filter by project path substring
-    scld -n 20 <query>        Show more results (default: 10)
-    scld --claude-only <q>    Only search Claude Code sessions
-    scld --codex-only <q>     Only search Codex sessions
+    scld <phrase> [phrase...]  Search + pick session to resume (default)
+    scld --no-resume <phrase>  Just list results, don't resume
+    scld -a <phrase>           Search assistant responses too
+    scld -p <project> <phrase> Filter by project path substring
+    scld -n 20 <phrase>        Show more results (default: 10)
+    scld --claude-only <phrase> Only search Claude Code sessions
+    scld --codex-only <phrase>  Only search Codex sessions
+
+Each argument is a separate phrase. A session is shown only if every phrase
+appears somewhere in it (anywhere in the conversation, in any order).
 
 Examples:
     scld "auth bug"
+    scld "bc-1234" "do not do that"
     scld -a "policy summary"
     scld -p BriteCore "rating engine"
     scld "endorsement"
@@ -50,7 +54,8 @@ SRC_CODEX = "codex"
 
 def parse_args():
     p = argparse.ArgumentParser(description="Search Claude Code and Codex conversations")
-    p.add_argument("query", nargs="+", help="Search terms")
+    p.add_argument("query", nargs="+",
+                   help="Search phrases; every phrase must appear in the session")
     p.add_argument("-a", "--assistant", dest="assistant", action="store_true", default=True,
                    help="Search assistant responses (default: on)")
     p.add_argument("--no-assistant", dest="assistant", action="store_false",
@@ -59,6 +64,8 @@ def parse_args():
                    help="Filter by project path substring")
     p.add_argument("-n", "--max-results", type=int, default=10,
                    help="Max sessions to show (default: 10)")
+    p.add_argument("-b", "--branch", action="store_true",
+                   help="Also match the session's git branch name (off by default)")
     p.add_argument("--no-resume", action="store_true",
                    help="Just list results, don't offer to resume")
     p.add_argument("--claude-only", action="store_true",
@@ -66,6 +73,51 @@ def parse_args():
     p.add_argument("--codex-only", action="store_true",
                    help="Only search Codex sessions")
     return p.parse_args()
+
+
+# --- Matching helpers ---
+
+HITS_PER_TERM = 3
+
+
+def match_indices(patterns, text):
+    """Return the indices of the phrases that appear in text."""
+    if not text:
+        return set()
+    return set(i for i, p in enumerate(patterns) if p.search(text))
+
+
+def add_hits(patterns, text, hits, matched):
+    """Record a (phrase index, snippet) hit for every phrase found in text."""
+    if not text:
+        return
+    for i, p in enumerate(patterns):
+        if not p.search(text):
+            continue
+        matched.add(i)
+        if sum(1 for idx, _ in hits if idx == i) < HITS_PER_TERM:
+            hits.append((i, _extract_snippet(text, p)))
+
+
+def select_hits(hits, limit):
+    """Pick up to limit snippets, round-robin over phrases so each is represented."""
+    by_term = {}
+    for idx, snip in hits:
+        by_term.setdefault(idx, []).append(snip)
+    out = []
+    round_no = 0
+    while len(out) < limit:
+        added = False
+        for idx in sorted(by_term):
+            if round_no < len(by_term[idx]):
+                out.append(by_term[idx][round_no])
+                added = True
+                if len(out) >= limit:
+                    break
+        if not added:
+            break
+        round_no += 1
+    return out
 
 
 # --- Claude Code session scanning ---
@@ -109,10 +161,12 @@ def resolve_resume_cwd(session_file, candidates):
     return None
 
 
-def scan_claude_session(session_file, pattern, search_assistant=False):
-    """Scan a Claude Code session file for matches."""
+def scan_claude_session(session_file, patterns, search_assistant=False):
+    """Scan a Claude Code session file for matches against every phrase."""
     user_hits = []
     assistant_hits = []
+    matched_user = set()
+    matched_assistant = set()
     first_user_msg = None
     branch = "?"
     timestamp = None
@@ -121,8 +175,8 @@ def scan_claude_session(session_file, pattern, search_assistant=False):
     relocated_cwd = None
     custom_title = None
     ai_title = None
-    title_match = False
-    branch_match = False
+    title_match = set()
+    branch_match = set()
 
     with open(session_file, "r") as f:
         for line in f:
@@ -135,7 +189,7 @@ def scan_claude_session(session_file, pattern, search_assistant=False):
                 timestamp = rec.get("timestamp")
             if branch == "?" and rec.get("gitBranch"):
                 branch = rec.get("gitBranch")
-                branch_match = bool(pattern.search(branch))
+                branch_match = match_indices(patterns, branch)
             if rec.get("cwd"):
                 if cwd is None:
                     cwd = rec.get("cwd")
@@ -148,14 +202,12 @@ def scan_claude_session(session_file, pattern, search_assistant=False):
                 ct = rec.get("customTitle") or ""
                 if ct:
                     custom_title = ct
-                    if pattern.search(ct):
-                        title_match = True
+                    title_match |= match_indices(patterns, ct)
             elif rtype == "ai-title":
                 at = rec.get("aiTitle") or ""
                 if at:
                     ai_title = at
-                    if pattern.search(at):
-                        title_match = True
+                    title_match |= match_indices(patterns, at)
 
             msg = rec.get("message", {})
             content = msg.get("content", "")
@@ -177,11 +229,11 @@ def scan_claude_session(session_file, pattern, search_assistant=False):
             if is_user and first_user_msg is None and len(content.strip()) > 5:
                 first_user_msg = content.strip()
 
-            if is_user and pattern.search(content):
-                user_hits.append(_extract_snippet(content, pattern))
+            if is_user:
+                add_hits(patterns, content, user_hits, matched_user)
 
-            if search_assistant and is_assistant and pattern.search(content):
-                assistant_hits.append(_extract_snippet(content, pattern))
+            if search_assistant and is_assistant:
+                add_hits(patterns, content, assistant_hits, matched_assistant)
 
     return {
         "branch": branch,
@@ -191,6 +243,8 @@ def scan_claude_session(session_file, pattern, search_assistant=False):
         "first_user_msg": first_user_msg,
         "user_hits": user_hits,
         "assistant_hits": assistant_hits,
+        "matched_user": matched_user,
+        "matched_assistant": matched_assistant,
         "title": custom_title or ai_title,
         "title_match": title_match,
         "branch_match": branch_match,
@@ -209,15 +263,17 @@ def find_codex_session_files(project_filter=None):
     return results
 
 
-def scan_codex_session(session_file, pattern, search_assistant=False, project_filter=None):
-    """Scan a Codex session file for matches."""
+def scan_codex_session(session_file, patterns, search_assistant=False, project_filter=None):
+    """Scan a Codex session file for matches against every phrase."""
     user_hits = []
     assistant_hits = []
+    matched_user = set()
+    matched_assistant = set()
     first_user_msg = None
     timestamp = None
     cwd = None
     branch = "?"
-    branch_match = False
+    branch_match = set()
 
     with open(session_file, "r") as f:
         for line in f:
@@ -236,7 +292,7 @@ def scan_codex_session(session_file, pattern, search_assistant=False, project_fi
                 for key in ("git_branch", "gitBranch", "branch"):
                     if branch == "?" and payload.get(key):
                         branch = payload.get(key)
-                        branch_match = bool(pattern.search(branch))
+                        branch_match = match_indices(patterns, branch)
 
             if timestamp is None and rec.get("timestamp"):
                 timestamp = rec.get("timestamp")
@@ -249,21 +305,18 @@ def scan_codex_session(session_file, pattern, search_assistant=False, project_fi
                     text = payload.get("message", "")
                     if first_user_msg is None and len(text.strip()) > 5:
                         first_user_msg = text.strip()
-                    if pattern.search(text):
-                        user_hits.append(_extract_snippet(text, pattern))
+                    add_hits(patterns, text, user_hits, matched_user)
 
                 if search_assistant and payload.get("type") == "agent_message":
                     text = payload.get("message", "")
-                    if pattern.search(text):
-                        assistant_hits.append(_extract_snippet(text, pattern))
+                    add_hits(patterns, text, assistant_hits, matched_assistant)
 
                 item = payload.get("item", {})
                 if item.get("type") == "UserMessage":
                     text = content_to_text(item.get("content", []))
                     if first_user_msg is None and len(text.strip()) > 5:
                         first_user_msg = text.strip()
-                    if pattern.search(text):
-                        user_hits.append(_extract_snippet(text, pattern))
+                    add_hits(patterns, text, user_hits, matched_user)
 
             if rec.get("type") == "response_item":
                 payload = rec.get("payload", {})
@@ -272,10 +325,9 @@ def scan_codex_session(session_file, pattern, search_assistant=False, project_fi
                 if role == "user":
                     if first_user_msg is None and len(text.strip()) > 5:
                         first_user_msg = text.strip()
-                    if pattern.search(text):
-                        user_hits.append(_extract_snippet(text, pattern))
-                elif search_assistant and role == "assistant" and pattern.search(text):
-                    assistant_hits.append(_extract_snippet(text, pattern))
+                    add_hits(patterns, text, user_hits, matched_user)
+                elif search_assistant and role == "assistant":
+                    add_hits(patterns, text, assistant_hits, matched_assistant)
 
     # Apply project filter based on cwd
     if project_filter and cwd and project_filter.lower() not in cwd.lower():
@@ -288,6 +340,8 @@ def scan_codex_session(session_file, pattern, search_assistant=False, project_fi
         "first_user_msg": first_user_msg,
         "user_hits": user_hits,
         "assistant_hits": assistant_hits,
+        "matched_user": matched_user,
+        "matched_assistant": matched_assistant,
         "branch_match": branch_match,
     }
 
@@ -379,8 +433,14 @@ def extract_codex_session_id(filepath):
 
 def main():
     args = parse_args()
-    query = " ".join(args.query)
-    pattern = re.compile(re.escape(query), re.IGNORECASE)
+    queries = args.query
+    patterns = [re.compile(re.escape(q), re.IGNORECASE) for q in queries]
+    all_terms = set(range(len(patterns)))
+    # One pattern used only to colorize any phrase inside a printed snippet.
+    hl_pattern = re.compile("|".join(re.escape(q) for q in queries), re.IGNORECASE)
+    query_disp = " + ".join('"{}"'.format(q) for q in queries)
+    user_hit_limit = max(3, len(patterns))
+    asst_hit_limit = max(2, len(patterns))
 
     results = []
 
@@ -389,9 +449,13 @@ def main():
         claude_files = find_claude_session_files(args.project)
         for sf in claude_files:
             sid = sf.stem
-            info = scan_claude_session(sf, pattern, search_assistant=args.assistant)
-            sid_match = bool(pattern.search(sid))
-            if not sid_match and not info["user_hits"] and not info["assistant_hits"] and not info.get("title_match") and not info.get("branch_match"):
+            info = scan_claude_session(sf, patterns, search_assistant=args.assistant)
+            matched = set(info["matched_user"]) | set(info["matched_assistant"])
+            matched |= set(info["title_match"])
+            matched |= match_indices(patterns, sid)
+            if args.branch:
+                matched |= set(info["branch_match"])
+            if matched != all_terms:
                 continue
             cwd = info.get("cwd") or ""
             proj_short = cwd.replace(str(Path.home()), "~") if cwd else "?"
@@ -406,26 +470,29 @@ def main():
                 "branch": info["branch"],
                 "timestamp": format_timestamp(info["timestamp"]),
                 "timestamp_sort": sortable_timestamp(info["timestamp"]),
-                "user_hits": info["user_hits"][:3],
-                "assistant_hits": info["assistant_hits"][:2],
+                "user_hits": select_hits(info["user_hits"], user_hit_limit),
+                "assistant_hits": select_hits(info["assistant_hits"], asst_hit_limit),
                 "first_user_msg": info["first_user_msg"],
                 "cwd": cwd,
                 "session_file": sf,
                 "title": info.get("title"),
-                "title_match": info.get("title_match", False),
+                "title_match": bool(info.get("title_match")),
             })
 
     # Scan Codex sessions
     if not args.claude_only:
         codex_files = find_codex_session_files(args.project)
         for sf in codex_files:
-            info = scan_codex_session(sf, pattern, search_assistant=args.assistant,
+            info = scan_codex_session(sf, patterns, search_assistant=args.assistant,
                                       project_filter=args.project)
             if info is None:
                 continue
             sid = extract_codex_session_id(sf)
-            sid_match = bool(pattern.search(sid))
-            if not sid_match and not info["user_hits"] and not info["assistant_hits"] and not info.get("branch_match"):
+            matched = set(info["matched_user"]) | set(info["matched_assistant"])
+            matched |= match_indices(patterns, sid)
+            if args.branch:
+                matched |= set(info["branch_match"])
+            if matched != all_terms:
                 continue
             cwd = info.get("cwd") or ""
             proj_short = cwd.replace(str(Path.home()), "~") if cwd else "?"
@@ -436,8 +503,8 @@ def main():
                 "branch": info["branch"],
                 "timestamp": format_timestamp(info["timestamp"]),
                 "timestamp_sort": sortable_timestamp(info["timestamp"]),
-                "user_hits": info["user_hits"][:3],
-                "assistant_hits": info["assistant_hits"][:2],
+                "user_hits": select_hits(info["user_hits"], user_hit_limit),
+                "assistant_hits": select_hits(info["assistant_hits"], asst_hit_limit),
                 "first_user_msg": info["first_user_msg"],
                 "cwd": cwd,
                 "session_file": sf,
@@ -465,8 +532,8 @@ def main():
             for snip in r["assistant_hits"]:
                 if snip not in existing["assistant_hits"]:
                     existing["assistant_hits"].append(snip)
-            existing["user_hits"] = existing["user_hits"][:3]
-            existing["assistant_hits"] = existing["assistant_hits"][:2]
+            existing["user_hits"] = existing["user_hits"][:user_hit_limit]
+            existing["assistant_hits"] = existing["assistant_hits"][:asst_hit_limit]
             existing["dup_count"] = existing.get("dup_count", 1) + 1
             continue
         seen[key] = r
@@ -474,7 +541,7 @@ def main():
     all_results = deduped
 
     if not all_results:
-        print("No matches for: {}".format(query))
+        print("No matches for: {}".format(query_disp))
         sys.exit(1)
 
     page_size = args.max_results
@@ -484,8 +551,8 @@ def main():
     def render_page(page):
         start = page * page_size
         end = min(start + page_size, total)
-        print("{}Found {} session(s) matching '{}' - page {}/{}{}\n".format(
-            BOLD, total, query, page + 1, total_pages, RESET))
+        print("{}Found {} session(s) matching {} - page {}/{}{}\n".format(
+            BOLD, total, query_disp, page + 1, total_pages, RESET))
         for i in range(start, end):
             r = all_results[i]
             print("{}{:>2}) {} {}{}  {}{}{}  branch:{}{}{}  {}".format(
@@ -499,16 +566,16 @@ def main():
             if r.get("dup_count"):
                 print("    {}(+{} related session(s) collapsed){}".format(DIM, r["dup_count"], RESET))
             if r.get("title"):
-                title_disp = highlight(r["title"], pattern)
+                title_disp = highlight(r["title"], hl_pattern)
                 print("    {}title:{} {}{}{}".format(YELLOW, RESET, BOLD + YELLOW, title_disp, RESET))
             if r["user_hits"]:
                 for snip in r["user_hits"]:
-                    print("    {} user: {}{}".format(GREEN + ">" + RESET, highlight(truncate(snip), pattern), RESET))
+                    print("    {} user: {}{}".format(GREEN + ">" + RESET, highlight(truncate(snip), hl_pattern), RESET))
             elif r["first_user_msg"]:
                 print("    {} first msg: {}{}".format(DIM + ">" + RESET, truncate(r["first_user_msg"], 90), RESET))
             if r["assistant_hits"]:
                 for snip in r["assistant_hits"]:
-                    print("    {} asst: {}{}".format(MAGENTA + "<" + RESET, highlight(truncate(snip, 120), pattern), RESET))
+                    print("    {} asst: {}{}".format(MAGENTA + "<" + RESET, highlight(truncate(snip, 120), hl_pattern), RESET))
             print()
 
     page = 0
