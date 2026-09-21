@@ -138,6 +138,28 @@ function drmi() { # drmi bankers
     docker images | grep ${query}  | cut -d " " -f 1 | xargs docker rmi
 }
 alias dprune="docker system prune -a -f --volumes"
+# force Compose v2: the oh-my-zsh docker-compose plugin aliases these to the v1 docker-compose binary
+alias dco="docker compose"
+alias dcb="docker compose build"
+alias dcdn="docker compose down"
+alias dce="docker compose exec"
+alias dck="docker compose kill"
+alias dcl="docker compose logs"
+alias dclf="docker compose logs -f"
+alias dclF="docker compose logs -f --tail 0"
+alias dcps="docker compose ps"
+alias dcpull="docker compose pull"
+alias dcr="docker compose run"
+alias dcrestart="docker compose restart"
+alias dcrm="docker compose rm"
+alias dcstart="docker compose start"
+alias dcst="docker compose start"
+alias dcstop="docker compose stop"
+alias dcsp="docker compose stop"
+alias dcup="docker compose up"
+alias dcupb="docker compose up --build"
+alias dcupd="docker compose up -d"
+alias dcupdb="docker compose up -d --build"
 # END DOCKER
 
 ### AWS
