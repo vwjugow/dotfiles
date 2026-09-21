@@ -25,12 +25,7 @@
     "PreToolUse": [
       {
         "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "rtk hook claude"
-          }
-        ]
+        "hooks": []
       },
       {
         "matcher": "Read|Edit|Write",
@@ -66,13 +61,14 @@
       }
     }
   },
+  "feedbackDrafts": "off",
   "effortLevel": "high",
   "voice": {
     "enabled": true,
     "mode": "hold"
   },
   "skipDangerousModePermissionPrompt": true,
-  "theme": "light",
+  "theme": "dark",
   "editorMode": "vim",
   "preferredNotifChannel": "terminal_bell",
   "agentPushNotifEnabled": true,
