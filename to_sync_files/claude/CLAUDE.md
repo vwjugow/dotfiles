@@ -1,5 +1,3 @@
-@RTK.md
-
 ## GitHub Account
 **ALWAYS** use **vwjugow** for all projects:
 - SSH: `git@github.com:vwjugow/<repo>.git`
@@ -16,6 +14,7 @@ Assume senior-engineer audience. No hand-holding, no explaining what he already 
 Distinguish verified-live vs. reasoned-from-code in ONE short clause, then move on.
 ### coding + results + operations
 Do not use "assert called" type of asserts in tests. These couple test to implementation.
+Name methods and functions (private ones too) as "verb_direct_object": `build_name_match_key`, `load_rows_by_id`, `resolve_entries`. Not a bare noun (`values`, `target_only_warnings`) or a preposition phrase (`with_id`, `to_columns`). Reasonable exceptions: predicates (`is_active`, `has_contact`), conversions (`to_dict`) and framework or overridden names (`validate`, `setUp`).
 ALWAYS give the full absolute path when writing a file to the scratchpad directory, but in general prefer local files.
 If instructions reference a skill that does not exist / cannot be invoked, say so LOUDLY and up front (name the missing skill) instead of silently working around it.
 Please always consider symlinks, I have a few of them, and dirs you see as different point to the same hard dir, do not report this as stale copies or similar.
@@ -37,11 +36,3 @@ Instead, use `"$(cat <file>)"` when you need to pass the token in a shell comman
 ### NEVER delete files
 Let me know which files you want removed and I'll do tha manually.
 As an alternative, if the file you need deleting is git tracked and you just needed to rename or move it, feel free to use `git rm` or `git mv`.
-# graphify
-- **graphify** (`~/.claude/skills/graphify/SKILL.md`) - any input to knowledge graph. Trigger: `/graphify`
-When the user types `/graphify`, use the installed graphify skill or instructions before doing anything else.
-
-## BriteCore repo only: Python type annotation gate
-@BRITECORE_TYPECHECK.md
-Blocking CI check (`.github/workflows/lint.yaml`). Read that file before writing or pushing any
-backend change under `lib/`, and run its local gate command before every such push.
