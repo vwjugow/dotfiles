@@ -18,6 +18,10 @@
       },
       {
         "hooks": [
+          {
+            "type": "command",
+            "command": "\"/Users/victorwjugow/.claude/hooks/context-mode-cache-heal.mjs\""
+          }
         ]
       }
     ],
