@@ -112,6 +112,35 @@ function gdif() {
         echo "It's not a git repository"
     fi;
 }
+# gj <pattern>: cd into the worktree that has a branch matching <pattern> (case-insensitive regex) checked out
+function gj() {
+    if [[ -z $1 ]]; then
+        echo "usage: gj <branch-pattern>"
+        return 1
+    fi
+    local matches
+    matches=$(git worktree list --porcelain 2>/dev/null | awk '
+        /^worktree /{wt=substr($0, 10)}
+        /^branch /{sub("^branch refs/heads/", ""); print $0 "\t" wt}' | grep -iE -- "^[^	]*$1")
+    if [[ -z $matches ]]; then
+        # not checked out anywhere, fall back to checking it out here (like git brc)
+        local branches
+        branches=$(git for-each-ref --sort=-committerdate refs/heads/ --format='%(refname:short)' | grep -iE -- "$1")
+        if [[ -z $branches ]]; then
+            echo "No branch matching '$1'"
+            return 1
+        fi
+        if [[ $(echo "$branches" | wc -l) -gt 1 ]]; then
+            branches=$(echo "$branches" | fzf --prompt="checkout> ") || return 1
+        fi
+        git checkout "$branches"
+        return
+    fi
+    if [[ $(echo "$matches" | wc -l) -gt 1 ]]; then
+        matches=$(echo "$matches" | fzf --delimiter='\t' --with-nth=1,2 --prompt="worktree> ") || return 1
+    fi
+    cd "$(echo "$matches" | cut -f2)"
+}
 # END GIT
 
 # SQL
@@ -216,7 +245,13 @@ function folder_storage {
 
 # Laburos
 # BriteCore
-alias wheredcbc="docker inspect docker-britecore-1 --format='{{range .Mounts}}{{.Source}} -> {{.Destination}}{{\"\\n\"}}{{end}}' | grep -i 'code\/britecore' | cut -d ' ' -f 1"
+alias wheredcbc="docker inspect docker-britecore-1 --format='{{range .Mounts}}{{if eq .Destination \"/code/britecore\"}}{{.Source}}{{\"\\n\"}}{{end}}{{end}}'"
+function switch_dcbc() {
+    local root
+    root="$(git rev-parse --show-toplevel)" || return 1
+    (cd "$root" && docker compose down && docker compose up -d britecore) || return 1
+    docker run --rm --privileged alpine sh -c 'sync; echo 3 > /proc/sys/vm/drop_caches'
+}
 function bbsiteshell() {
     local site="$1" cluster="test"
     shift
