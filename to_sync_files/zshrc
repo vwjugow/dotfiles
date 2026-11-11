@@ -18,7 +18,17 @@ elif [[ -x /usr/local/bin/brew ]]; then
     (cd "$HOME" && /usr/local/bin/brew shellenv) 2>/dev/null
   )"
 fi
-export PATH="${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin:$PATH"
+# MacPorts (Intel Macs, see scripts/MAC/detect_arch.sh): command line packages
+# come from MacPorts, so it goes before Homebrew, which only provides casks.
+# Commands MacPorts names differently than Homebrew (GNU sed as `sed`,
+# rename.pl as `rename`) are linked by scripts/MAC/install_packages.sh.
+if [[ -x /opt/local/bin/port ]]; then
+  export PATH="/opt/local/bin:/opt/local/sbin:$PATH"
+  export PATH="$HOME/.local/port-links/bin:$PATH"
+  FPATH="/opt/local/share/zsh/site-functions:${FPATH}"
+else
+  export PATH="${HOMEBREW_PREFIX}/opt/gnu-sed/libexec/gnubin:$PATH"
+fi
 
 # Path to your oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
