@@ -453,10 +453,10 @@ function load_nvm() {
     # Ruby
 function load_rbenv() {
     eval "$(rbenv init - zsh)"
-    export PATH="/opt/homebrew/opt/imagemagick@6/bin:$PATH"
-    export LDFLAGS="-L/opt/homebrew/opt/libffi/lib"
-    export CPPFLAGS="-I/opt/homebrew/opt/libffi/include"
-    export PKG_CONFIG_PATH="/opt/homebrew/opt/libffi/lib/pkgconfig"
+    export PATH="${HOMEBREW_PREFIX}/opt/imagemagick@6/bin:$PATH"
+    export LDFLAGS="-L${HOMEBREW_PREFIX}/opt/libffi/lib"
+    export CPPFLAGS="-I${HOMEBREW_PREFIX}/opt/libffi/include"
+    export PKG_CONFIG_PATH="${HOMEBREW_PREFIX}/opt/libffi/lib/pkgconfig"
 }
 alias lines_to_list="sed -e 's/\\n/ /g'"
 alias fix_external_kb="setxkbmap -layout us,es,ru -variant ,ast,phonetic_YAZHERTY -option 'grp:alt_shift_toggle'"
@@ -467,7 +467,7 @@ alias audio="pavucontrol"
 alias pg_start="launchctl load ~/Library/LaunchAgents"
 alias pg_stop="launchctl unload ~/Library/LaunchAgents"
 alias ulkc="security unlock-keychain ~/Library/Keychains/login.keychain-db"
-alias mysql84='/opt/homebrew/opt/mysql-client@8.4/bin/mysql'
+alias mysql84='${HOMEBREW_PREFIX}/opt/mysql-client@8.4/bin/mysql'
 alias cld="claude --dangerously-skip-permissions"
 alias cdx="codex --yolo"
 # scld execs into claude/codex from a subprocess, so its os.chdir() never reaches
