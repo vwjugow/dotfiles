@@ -169,6 +169,8 @@ function drmi() { # drmi bankers
 alias dprune="docker system prune -a -f --volumes"
 # force Compose v2: the oh-my-zsh docker-compose plugin aliases these to the v1 docker-compose binary
 alias dco="docker compose"
+# Atlassian MCP server for Claude Code, e.g. `mcpatl up -d`, `mcpatl logs -f`
+alias mcpatl="docker compose -f $HOME/dotfiles/to_sync_files/mcp-atlassian/docker-compose.yml"
 alias dcb="docker compose build"
 alias dcdn="docker compose down"
 alias dce="docker compose exec"

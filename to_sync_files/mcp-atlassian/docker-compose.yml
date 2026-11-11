@@ -1,0 +1,16 @@
+# Atlassian MCP server (Jira + Confluence) for Claude Code.
+# Claude Code reaches it at http://127.0.0.1:9010/mcp (see ~/.claude.json).
+# Credentials live in the untracked ~/.config/mcp-atlassian/env, seeded from env.example.
+# Start / update: mcpatl up -d   (alias in scripts/aliases.sh)
+name: mcp-atlassian
+
+services:
+  jira-mcp:
+    container_name: jira-mcp
+    image: ghcr.io/sooperset/mcp-atlassian:0.23.1
+    command: ["--transport", "streamable-http", "--port", "9010", "--path", "/mcp"]
+    ports:
+      - "127.0.0.1:9010:9010"
+    env_file:
+      - ${HOME}/.config/mcp-atlassian/env
+    restart: unless-stopped

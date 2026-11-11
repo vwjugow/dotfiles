@@ -53,3 +53,5 @@
 - shell:
     - command: '[ -f ~/.zsh_secrets ] || cp zsh_secrets.example ~/.zsh_secrets'
       description: Seed ~/.zsh_secrets from template if missing (holds untracked credentials)
+    - command: '[ -f ~/.config/mcp-atlassian/env ] || { mkdir -p ~/.config/mcp-atlassian && install -m 600 mcp-atlassian/env.example ~/.config/mcp-atlassian/env; }'
+      description: Seed ~/.config/mcp-atlassian/env from template if missing (holds Atlassian API tokens)
